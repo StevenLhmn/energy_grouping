@@ -23,19 +23,17 @@ This repository contains the implementation and supporting code for my bachelor'
 
 Run the following commands in Command Prompt (CMD):
 
-bash
+```bash
 
-git clone <repository-url>
+git clone git@github.com:StevenLhmn/energy_grouping.git
 
-cd <repository>
-
-
+cd energy_grouping
 
 python -m venv .venv
 
-.venv\\\\Scripts\\\\activate     # Windows
+.venv\Scripts\activate     # Windows
 
-pip install -r requirements.txt
+pip install -r req.txt
 
-
+```
 
