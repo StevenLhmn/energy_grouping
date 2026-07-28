@@ -23,8 +23,7 @@ This repository contains the implementation and supporting code for my bachelor'
 
 Run the following commands in Command Prompt (CMD):
 
-```bash
-
+```cmd
 git clone git@github.com:StevenLhmn/energy_grouping.git
 
 cd energy_grouping
@@ -34,7 +33,6 @@ python -m venv .venv
 .venv\Scripts\activate     # Windows
 
 pip install -r req.txt
-
 ```
 
 ## Git Strategy
