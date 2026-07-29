@@ -10,14 +10,13 @@ This repository contains the implementation and supporting code for my bachelor'
 
 ## Requirements
 
-
-
 * Windows (not yet tested on Linux)
 * Python 3.11.2
 * pip
 * Git
 
-
+**optional:**
+* draw.io
 
 ## Setup
 
