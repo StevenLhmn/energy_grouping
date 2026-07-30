@@ -1,9 +1,10 @@
 from abc import ABC, abstractmethod
+import matplotlib.pyplot as plt
 
 class I_Grouping_Algo(ABC):
 
     @abstractmethod
-    def group(self, vector_list: ) -> None:
+    def group(self, vector_list: list) -> None:
         """vector: point, dimensions: x, y, z, 
         [
             point[
@@ -22,5 +23,6 @@ class I_Grouping_Algo(ABC):
         """
 
     @abstractmethod
-    def extract_text(self) -> str:
-        """Return text extracted from the loaded file."""
+    def animate(self, ax :plt.Axes):
+        """Show an animatoin of the algo"""
+        
