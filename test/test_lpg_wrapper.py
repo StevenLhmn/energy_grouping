@@ -61,3 +61,7 @@ class Test_LPGWrapper(unittest.TestCase):
         lpg = LPG_Wrapper(42)
         with self.assertRaises(ValueError):
             lpg.generate_appartment(101, date(2022, 4, 1), date(2022, 4, 1), "2h")
+
+
+if __name__ == '__main__':
+    unittest.main()

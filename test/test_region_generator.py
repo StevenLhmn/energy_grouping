@@ -110,3 +110,6 @@ class Test_RegionGenerator(unittest.TestCase):
 
         with self.assertRaises(ValueError):
             generator.geo_LPG(bbox=bbox, time_steps=time_steps, max_energy=max_energy)
+
+if __name__ == '__main__':
+    unittest.main()
