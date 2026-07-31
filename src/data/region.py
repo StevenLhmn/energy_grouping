@@ -5,7 +5,14 @@ import geopandas as gpd
 class Region:
     houses: gpd.GeoDataFrame = None 
     def __init__(self, houses):
+        '''
+            houses is a gdf with columns ['gen', 'load', 'coordinate']
+            in gen and load are np.ndarrays with the same lenghth
+            in coordinate are points(x, y) in epsg: 4326
+            the coordinate cant be the same for 2 houses
+        '''
         self.houses = self._check_houses(houses)
+
 
     def _check_houses(self, houses):
         if not isinstance(houses, gpd.GeoDataFrame):
@@ -38,3 +45,23 @@ class Region:
             raise TypeError("Column 'coordinate' must contain Point objects")
 
         return houses
+
+    def _index_houses(self):
+        # use a hash including the cordiante and a unique id to index each house 
+        
+        ids = []
+        for _, row in self.houses.iterrows():
+            id = f'{row.x} + {row.y}'
+            print(id)
+            if id in ids:
+                raise ValueError(f'Duplicate coordinate found at: {id}')
+            ids += [id]
+        self.houses["id"] = ids
+
+
+    def get_indexes(self):
+        """
+            No house can have the same index and the house will keeep the index for the rest of the time.
+        """        
+        return self.houses["id"]
+        
