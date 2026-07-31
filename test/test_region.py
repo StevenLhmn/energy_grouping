@@ -210,6 +210,49 @@ class Test_Region(unittest.TestCase):
         with self.assertRaises(TypeError):
             Region(houses=wrong_houses_gdf)
 
+    def test_same_coordinate(self):
+        # Create a non-GeoDataFrame input (e.g., a regular DataFrame)
+        gdf = gpd.GeoDataFrame(
+            {
+                'gen': [
+                    np.array([1, 2, 3]),
+                    np.array([4, 5, 6]),
+                    np.array([7, 8, 9])],
+                'load': [
+                    np.array([1, 2, 3]),
+                    np.array([4, 5, 6]),
+                    np.array([7, 8, 9])],
+                'coordinate': [
+                    Point(1, 1),
+                    Point(1, 1),
+                    Point(2, 2)]
+            }
+        )
+        with self.assertRaises(ValueError):
+            Region(houses=gdf)
+
+    def test_index_names(self):
+        # Create a non-GeoDataFrame input (e.g., a regular DataFrame)
+        gdf = gpd.GeoDataFrame(
+            {
+                'gen': [
+                    np.array([1, 2, 3]),
+                    np.array([4, 5, 6]),
+                    np.array([7, 8, 9])],
+                'load': [
+                    np.array([1, 2, 3]),
+                    np.array([4, 5, 6]),
+                    np.array([7, 8, 9])],
+                'coordinate': [
+                    Point(0, 0),
+                    Point(1.6516, 1.165),
+                    Point(2, 2)]
+            }
+        )
+        region = Region(houses=gdf)
+        ids = region.get_indexes()
+        self.assertTrue(all(id in ["X0.000000|Y0.000000", "X1.651600|Y1.165000", "X2.000000|Y2.000000"] for id in ids))
+
 
 if __name__ == '__main__':
     unittest.main()

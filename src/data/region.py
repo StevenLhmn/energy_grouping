@@ -12,6 +12,7 @@ class Region:
             the coordinate cant be the same for 2 houses
         '''
         self.houses = self._check_houses(houses)
+        self._index_houses()
 
 
     def _check_houses(self, houses):
@@ -47,15 +48,20 @@ class Region:
         return houses
 
     def _index_houses(self):
-        # use a hash including the cordiante and a unique id to index each house 
-        
         ids = []
-        for _, row in self.houses.iterrows():
-            id = f'{row.x} + {row.y}'
-            print(id)
-            if id in ids:
-                raise ValueError(f'Duplicate coordinate found at: {id}')
-            ids += [id]
+        seen = set()
+
+        for coord in self.houses["coordinate"]:
+            key = (round(coord.x, 6), round(coord.y, 6))
+
+            if key in seen:
+                raise ValueError(f"Duplicate coordinate found at: {key}")
+
+            seen.add(key)
+
+            id = f"X{key[0]:.6f}|Y{key[1]:.6f}"
+            ids.append(id)
+
         self.houses["id"] = ids
 
 
