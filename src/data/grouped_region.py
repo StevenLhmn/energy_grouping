@@ -1,0 +1,2 @@
+class GroupedRegion:
+    pass
