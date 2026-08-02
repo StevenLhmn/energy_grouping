@@ -1,3 +1,4 @@
+import numpy as np
 import matplotlib.pyplot as plt
 from src.grouping.i_grouping_algo import I_Grouping_Algo
 from itertools import combinations
@@ -8,7 +9,7 @@ from src.statistic.autarky import Autarky
 
 class Brute_Force(I_Grouping_Algo):
 
-    def group(self, region: Region, opti_func: Callable[]) -> None:
+    def group(self, region: Region, opti_func: Callable[np.ndarray, np.ndarray]) -> None:
         """
         vector_dict: {id -> vector, ...}
         vector: (dim1, dim2, ...)

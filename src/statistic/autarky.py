@@ -47,5 +47,16 @@ class Autarky:
         elif total_load > 0:
             return self_consumption / total_load
 
-    def optimization_function(self, grouped_region: GroupedRegion, distance_factor: float):
+    def get_
 
+    def optimization_function(self, grouped_region: GroupedRegion, distance_factor: float):
+        """
+        Calculates the autarky of a grouped region and returns the negative value of it.
+        This is used as an optimization function for the grouping algorithm.
+        The distance factor is used to penalize groups that are too far apart.
+        """
+        gen = grouped_region.get_gen()
+        load = grouped_region.get_load()
+        autarky = self.get_autarky(gen, load)
+        distance_penalty = distance_factor * grouped_region.get_average_distance()
+        return -autarky + distance_penalty
