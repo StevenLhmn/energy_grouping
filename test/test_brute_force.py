@@ -24,5 +24,24 @@ class Test_BruteForce(unittest.TestCase):
         }
         self.assertTrue()
 
+    def test_powerset(self):
+        set = {1, 2, 3}
+        result = Brute_Force()._powerset(set)
+        aimed_result = [(), (1,), (2,), (3,), (1, 2), (1, 3), (2, 3), (1, 2, 3)]
+        self.assertEqual(result, aimed_result)
+
+    def test_partitions(self):
+        set = {1, 2, 3}
+        result = Brute_Force()._partitions(set)
+        aimed_result = [[{1}, {2}, {3}], [{1, 2}, {3}], [{1, 3}, {2}], [{2, 3}, {1}], [{1, 2, 3}]]
+        self.assertEqual(result, aimed_result)
+
+    def test_bell_number(self):
+        aimed_result = [1, 1, 2, 5, 15, 52]
+        for n in range(6):
+            set = np.arange(n)
+            result = Brute_Force()._partitions(set)
+            self.assertEqual(len(result), aimed_result[n])
+
 if __name__ == '__main__':
     unittest.main()
