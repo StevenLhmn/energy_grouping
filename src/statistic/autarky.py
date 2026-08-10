@@ -47,7 +47,8 @@ class Autarky:
         elif total_load > 0:
             return self_consumption / total_load
 
-    def get_
+    def get_autarky():
+        pass
 
     def optimization_function(self, grouped_region: GroupedRegion, distance_factor: float):
         """

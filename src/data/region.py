@@ -65,7 +65,7 @@ class Region:
         self.houses["id"] = ids
 
 
-    def get_indexes(self):
+    def get_indexes(self) -> list[str]:
         """
             No house can have the same index and the house will keeep the index for the rest of the time.
         """        
