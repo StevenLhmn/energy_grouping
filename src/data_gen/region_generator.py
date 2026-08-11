@@ -22,7 +22,7 @@ class RegionGenerator:
         np.random.seed(self.seed)
 
     def simple(self):
-        return Region(
+        return self.simple_from_gdf(
             gpd.GeoDataFrame(
                 {
                     "coordinate": [Point(0, 0),
@@ -42,7 +42,16 @@ class RegionGenerator:
                 }
             )
         )
-    
+
+    def simple_from_gdf(self, gdf: gpd.GeoDataFrame):
+        """
+        Generate a Region from a GeoDataFrame of coordinates and load/gen data.
+
+        Parameters:
+        - gdf: GeoDataFrame with columns "coordinate", "load", and "gen"
+        """
+        return Region(gdf)
+
     def random(self, n_houses: int = 10, time_steps: int = 24, max_energy: int = 10):
         return Region(
             gpd.GeoDataFrame(

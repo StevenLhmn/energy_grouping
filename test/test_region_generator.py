@@ -3,6 +3,8 @@ import numpy as np
 from shapely.geometry import Point
 from src.data.region import Region
 from src.data_gen.region_generator import RegionGenerator
+import geopandas as gpd
+from pandas.testing import assert_frame_equal
 
 
 class Test_RegionGenerator(unittest.TestCase):
@@ -33,6 +35,33 @@ class Test_RegionGenerator(unittest.TestCase):
         region = generator.simple()
         # Check if the returned object is an instance of Region, if that is true it has the right structure and the right columns
         self.assertIsInstance(region, Region)
+
+    def test_simple_region_generation_from_gdf(self):
+        generator = RegionGenerator()
+        gdf = gpd.GeoDataFrame(
+            {
+                "coordinate": [Point(0, 0),
+                                Point(1, 1),
+                                Point(2, 2),
+                                Point(3, 3)],
+                "load":  [
+                    np.array([1,1,1]),
+                    np.array([2,3,1]),
+                    np.array([1,2,3]),
+                    np.array([0,0,0])],
+                "gen":
+                    [np.array([3,1,2]),
+                    np.array([2,2,1]),
+                    np.array([1,3,3]),
+                    np.array([2,3,1])]   
+            }
+        )
+        region_from_gdf = generator.simple_from_gdf(gdf)
+        self.assertIsInstance(region_from_gdf, Region)
+        self.assertTrue(region_from_gdf.houses["gen"].equals(gdf["gen"]))
+        self.assertTrue(region_from_gdf.houses["load"].equals(gdf["load"]))
+        self.assertTrue(region_from_gdf.houses["coordinate"].equals(gdf["coordinate"]))
+        self.assertTrue(region_from_gdf.houses.id.tolist() == ['X0.000000|Y0.000000', 'X1.000000|Y1.000000', 'X2.000000|Y2.000000', 'X3.000000|Y3.000000'])
 
     def test_random_region_generation(self):
         generator = RegionGenerator(seed=42)

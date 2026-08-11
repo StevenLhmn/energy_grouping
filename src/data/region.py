@@ -11,7 +11,7 @@ class Region:
             in coordinate are points(x, y) in epsg: 4326
             the coordinate cant be the same for 2 houses
         '''
-        self.houses = self._check_houses(houses)
+        self.houses = self._check_houses(houses).copy()
         self._index_houses()
 
 

@@ -18,25 +18,25 @@ class Brute_Force(I_Grouping_Algo):
                 ]
         return powerset
 
-    def _partitions(self, set):
-        if not set:
-            return [[]]
+    def _partitions(self, s: set):
+        if len(s) <= 0:
+            return [frozenset()]
 
-        elements = list(set)
+        elements = list(s)
         first = elements[0]
         rest = set(elements[1:])
 
-        result = []
+        result = set()
 
         for partition in self._partitions(rest):
             # Put first into each existing block
-            for i in range(len(partition)):
-                new_partition = [block[:] for block in partition]
-                new_partition[i].append(first)
-                result.append(new_partition)
+            for i, block in enumerate(partition):
+                new_partition = list(partition)
+                new_partition[i] = block | frozenset([first])
+                result.add(frozenset(new_partition))
 
-            # Put first into its own new block
-            result.append([[first]] + partition)
+            # Put first into a new block
+            result.add(partition | frozenset([frozenset([first])]))
 
         return result
 
@@ -70,10 +70,12 @@ class Brute_Force(I_Grouping_Algo):
             for label, group in enumerate(partition):
                 for id in group:
                     labels[id] = label
-                    region = GroupedRegion(region, labels=labels)
-                    region.
+            grouped_region = GroupedRegion(region, labels=labels)
+            partition_autarky = grouped_region.region_autarky()
             if best_partition is None or partition_autarky > best_partition[1]:
-                best_partition = (partition, partition_autarky)
+                best_partition = (partition, partition_autarky, labels)
+        
+        return GroupedRegion(region, labels=best_partition[2])
 
 
     def animate(self, ax :plt.Axes):
