@@ -39,7 +39,9 @@ class RegionGenerator:
                         np.array([2,2,1]),
                         np.array([1,3,3]),
                         np.array([2,3,1])]   
-                }
+                },
+                geometry='coordinate',
+                crs="EPSG:4326"
             )
         )
 
@@ -59,7 +61,9 @@ class RegionGenerator:
                     "coordinate": [Point(np.random.uniform(0, 10), np.random.uniform(0, 10)) for _ in range(n_houses)],
                     "load": [np.random.randint(1, max_energy, time_steps) for _ in range(n_houses)],
                     "gen": [np.random.randint(1, max_energy, time_steps) for _ in range(n_houses)]
-                }
+                },
+                geometry='coordinate',
+                crs="EPSG:4326"
             )
         )
 
@@ -89,7 +93,9 @@ class RegionGenerator:
                     "coordinate": centroids,
                     "load": [np.random.randint(1, max_energy, time_steps) for _ in range(len(gdf))],
                     "gen": [np.random.randint(1, max_energy, time_steps) for _ in range(len(gdf))]
-                }
+                },
+                geometry='coordinate',
+                crs="EPSG:4326"
             )
         )
 
@@ -162,6 +168,8 @@ class RegionGenerator:
                     "coordinate": gdf.centroid,  
                     "load": load,
                     "gen": gen,
-                }
+                },
+                geometry='coordinate',
+                crs="EPSG:4326"
             )
         )          

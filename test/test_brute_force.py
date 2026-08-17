@@ -37,32 +37,34 @@ class Test_BruteForce(unittest.TestCase):
             self.assertEqual(len(result), aimed_result[n])
 
     def test_positive(self):
-            gdf = gpd.GeoDataFrame(
-                {
-                    "coordinate": [
-                        Point(0, 0),
-                        Point(1, 1),
-                        Point(2, 2),
+        gdf = gpd.GeoDataFrame(
+            {
+                "coordinate": [
+                    Point(0, 0),
+                    Point(1, 1),
+                    Point(2, 2),
+                ],
+                "load": [
+                        np.array([1,1,1]),
+                        np.array([2,3,1]),
+                        np.array([1,2,3]),
                     ],
-                    "load": [
-                            np.array([1,1,1]),
-                            np.array([2,3,1]),
-                            np.array([1,2,3]),
-                        ],
-                    "gen": [
-                        np.array([3,1,2]),
-                        np.array([2,2,1]),
-                        np.array([1,3,3]),
-                    ]   
-                }
-            )
-            grouped_region = Brute_Force().group(RegionGenerator().simple_from_gdf(gdf))
-            aimed_result = {
-                "X0.000000|Y0.000000": 0,
-                "X1.000000|Y1.000000": 0,
-                "X2.000000|Y2.000000": 0
-            }
-            self.assertEqual(grouped_region.labels, aimed_result)
+                "gen": [
+                    np.array([3,1,2]),
+                    np.array([2,2,1]),
+                    np.array([1,3,3]),
+                ]   
+            },
+            geometry='coordinate',
+            crs="EPSG:4326"
+        )
+        grouped_region = Brute_Force().group(RegionGenerator().simple_from_gdf(gdf))
+        aimed_result = {
+            "X0.000000|Y0.000000": 0,
+            "X1.000000|Y1.000000": 0,
+            "X2.000000|Y2.000000": 0
+        }
+        self.assertEqual(grouped_region.labels, aimed_result)
 
     def test_positive(self):
         gdf = gpd.GeoDataFrame(
@@ -82,13 +84,15 @@ class Test_BruteForce(unittest.TestCase):
                     np.array([2,2,1]),
                     np.array([1,3,3]),
                 ]   
-            }
+            },
+            geometry='coordinate',
+            crs="EPSG:4326"
         )
-        grouped_region = Brute_Force().group(RegionGenerator().simple_from_gdf(gdf))
+        grouped_region = Brute_Force().group(RegionGenerator().simple_from_gdf(gdf), .5)
         aimed_result = {
             "X0.000000|Y0.000000": 0,
-            "X1.000000|Y1.000000": 0,
-            "X2.000000|Y2.000000": 0
+            "X1.000000|Y1.000000": 1,
+            "X2.000000|Y2.000000": 1
         }
         self.assertEqual(grouped_region.labels, aimed_result)
 

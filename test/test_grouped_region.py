@@ -97,7 +97,9 @@ class Test_GroupedRegion(unittest.TestCase):
                     np.array([2,2,1]),
                     np.array([1,3,3]),
                 ]   
-            }
+            },
+            geometry='coordinate',
+            crs="EPSG:4326"
         )
         region = RegionGenerator().simple_from_gdf(gdf)
         labels = {

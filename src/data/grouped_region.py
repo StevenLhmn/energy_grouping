@@ -1,11 +1,16 @@
+from tokenize import group
+
 from src.data.region import Region
+import geopandas as gpd
 import numpy as np
 
 class GroupedRegion:
+
+
     def __init__(self, region: Region, labels: dict[str: int]):
         
-        self.region = region
-        self.labels = self._check_labels(labels)
+        self.houses = region.houses.copy()
+        self.houses["label"] = self.houses["id"].map(self._check_labels(labels))
 
     def _check_labels(self, labels: dict[str: int]):
         #TODO: check if labels are valid 
@@ -51,7 +56,7 @@ class GroupedRegion:
         self_consumption = np.minimum(gen_sum, load_sum)
         return self_consumption
     
-    def get_autarky(self, gen: np.ndarray, load: np.ndarray):
+    def group_autarky(self, gen: np.ndarray, load: np.ndarray):
         self_consumption = sum(self.group_self_consumption(gen, load))
         if len(load.shape) == 1:
             total_load = sum(load)
@@ -71,10 +76,9 @@ class GroupedRegion:
         """
         calculates the autarky of the region based on the labels
         
-        return: the total autarky of the region
+        return: the total autarky of the region in decimal from 0 to 1
         """
-        houses = self.region.houses.copy()
-        houses["label"] = houses["id"].map(self.labels)
+        houses = self.houses.copy()
         total_self_consumption = 0
         for label in houses["label"].unique():
             group = houses[houses["label"] == label]
@@ -85,14 +89,41 @@ class GroupedRegion:
 
         return total_self_consumption / np.array(houses["load"].to_list()).sum()
 
-        # def optimization_function(self, grouped_region: GroupedRegion, distance_factor: float):
-        #     """
-        #     Calculates the autarky of a grouped region and returns the negative value of it.
-        #     This is used as an optimization function for the grouping algorithm.
-        #     The distance factor is used to penalize groups that are too far apart.
-        #     """
-        #     gen = grouped_region.get_gen()
-        #     load = grouped_region.get_load()
-        #     autarky = self.get_autarky(gen, load)
-        #     distance_penalty = distance_factor * grouped_region.get_average_distance()
-        #     return -autarky + distance_penalty
+    def region_distance_score(self):
+        """
+        calculates the  distance score of the region based on the labels
+        
+        return: the total distance score of the region in decimal from 0 to 1
+        """
+        # calculate eucledian center
+        # calculate eucledian group center
+        # calculate total distance from center to each house
+        # calculate the total distance from each house to its group center
+        # divide total group distance by total distance to get the score.
+        # invert score so that 1 is best and 0 is worst
+
+        houses = self.houses.copy()
+       
+        centroid = houses.geometry.union_all().centroid
+        distance = houses.geometry.distance(centroid).sum()
+        group_distance = 0
+
+        for label in houses["label"].unique():
+            group = houses[houses["label"] == label]
+            group_centroid = group.geometry.union_all().centroid
+            group_distance += group.geometry.distance(group_centroid).sum()
+
+        return 1 - (group_distance / distance) if distance > 0 else 1
+
+    def region_score(self, distance_weight: float = 0.5):
+        """
+        mixes autarky with distance to find the best grouping.
+        
+        return: the total score of the region
+        """
+        if not 0 <= distance_weight <= 1:
+            raise ValueError("distance_weight must be between 0 and 1")
+
+        autarky = self.region_autarky() * (1 - distance_weight)
+        distance = self.region_distance_score() * distance_weight
+        return autarky + distance

@@ -4,7 +4,6 @@ from src.grouping.i_grouping_algo import I_Grouping_Algo
 from itertools import combinations
 from collections.abc import Callable 
 from src.data.region import Region
-from src.statistic.autarky import Autarky
 from src.data.grouped_region import GroupedRegion
 
 
@@ -40,7 +39,7 @@ class Brute_Force(I_Grouping_Algo):
 
         return result
 
-    def group(self, region: Region) -> GroupedRegion:
+    def group(self, region: Region, distance_weight: float) -> GroupedRegion:
         """
         vector_dict: {id -> vector, ...}
         vector: (dim1, dim2, ...)
@@ -48,8 +47,8 @@ class Brute_Force(I_Grouping_Algo):
 
         return: {id -> lable, ...}
         """
-        # 1. find all unique group combinations (power sert).
-        combinations = self._powerset(set(region.get_indexes()))
+        # 1. find all unique group combinations (power set).
+        # combinations = self._powerset(set(region.get_indexes()))
 
         # 2. calculate group loads and selfcons. TODO check if its faster
         # houses = region.houses
@@ -71,11 +70,11 @@ class Brute_Force(I_Grouping_Algo):
                 for id in group:
                     labels[id] = label
             grouped_region = GroupedRegion(region, labels=labels)
-            partition_autarky = grouped_region.region_autarky()
-            if best_partition is None or partition_autarky > best_partition[1]:
-                best_partition = (partition, partition_autarky, labels)
+            partition_score = grouped_region.region_score(distance_weight)
+            if best_partition is None or partition_score > best_partition[0]:
+                best_partition = (partition_score, labels)
         
-        return GroupedRegion(region, labels=best_partition[2])
+        return GroupedRegion(region, labels=best_partition[1])
 
 
     def animate(self, ax :plt.Axes):

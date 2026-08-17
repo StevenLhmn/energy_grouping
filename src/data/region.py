@@ -45,6 +45,17 @@ class Region:
         if not all(isinstance(coord, Point) for coord in houses['coordinate']):
             raise TypeError("Column 'coordinate' must contain Point objects")
 
+        # Check that gdf gemometry is set to the coordinate column
+        try:
+            if houses.geometry.name != 'coordinate':
+                pass
+        except AttributeError:
+            raise ValueError("GeoDataFrame must have a geometry column named 'coordinate'")
+
+        # Check that the GeoDataFrame has a valid CRS
+        if not houses.crs == 'EPSG:4326':
+            raise ValueError("GeoDataFrame must be EPSG:4326")
+
         return houses
 
     def _index_houses(self):

@@ -54,7 +54,9 @@ class Test_RegionGenerator(unittest.TestCase):
                     np.array([2,2,1]),
                     np.array([1,3,3]),
                     np.array([2,3,1])]   
-            }
+            },
+            geometry='coordinate',
+            crs="EPSG:4326"
         )
         region_from_gdf = generator.simple_from_gdf(gdf)
         self.assertIsInstance(region_from_gdf, Region)
