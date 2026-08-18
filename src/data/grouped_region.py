@@ -127,3 +127,14 @@ class GroupedRegion:
         autarky = self.region_autarky() * (1 - distance_weight)
         distance = self.region_distance_score() * distance_weight
         return autarky + distance
+
+    def get_labels(self):
+        labels = self.houses[["id","label"]]
+        return labels.set_index("id")["label"].to_dict()
+
+    def get_partition(self):
+        partition = {}
+        for label in self.houses["label"].unique():
+            group = self.houses[self.houses["label"] == label]
+            partition[label] = frozenset(group["id"].tolist())
+        return frozenset(partition.values())

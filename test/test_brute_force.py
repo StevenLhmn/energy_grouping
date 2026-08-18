@@ -88,13 +88,114 @@ class Test_BruteForce(unittest.TestCase):
             geometry='coordinate',
             crs="EPSG:4326"
         )
-        grouped_region = Brute_Force().group(RegionGenerator().simple_from_gdf(gdf), .5)
-        aimed_result = {
-            "X0.000000|Y0.000000": 0,
-            "X1.000000|Y1.000000": 1,
-            "X2.000000|Y2.000000": 1
-        }
-        self.assertEqual(grouped_region.labels, aimed_result)
+        region = RegionGenerator().simple_from_gdf(gdf)
+        grouped_region, score = Brute_Force().group(region, .5)
+        aimed_result = frozenset([
+            frozenset(["X0.000000|Y0.000000"]),
+            frozenset(["X1.000000|Y1.000000"]),
+            frozenset(["X2.000000|Y2.000000"])
+        ])
+        partition = grouped_region.get_partition()
+        self.assertEqual(partition, aimed_result)
+        self.assertAlmostEqual(score, 0.9666, places=3)
+
+    def test_small_weight(self):
+        gdf = gpd.GeoDataFrame(
+            {
+                "coordinate": [
+                    Point(0, 0),
+                    Point(1, 1),
+                    Point(2, 2),
+                ],
+                "load": [
+                        np.array([1,1,1]),
+                        np.array([2,3,1]),
+                        np.array([1,2,3]),
+                    ],
+                "gen": [
+                    np.array([3,1,2]),
+                    np.array([2,2,1]),
+                    np.array([1,3,3]),
+                ]   
+            },
+            geometry='coordinate',
+            crs="EPSG:4326"
+        )
+        region = RegionGenerator().simple_from_gdf(gdf)
+        grouped_region, score = Brute_Force().group(region, .1)
+        aimed_result = frozenset([
+            frozenset(["X0.000000|Y0.000000"]),
+            frozenset(["X1.000000|Y1.000000", "X2.000000|Y2.000000"])
+        ])
+        partition = grouped_region.get_partition()
+        self.assertEqual(partition, aimed_result)
+        self.assertAlmostEqual(score, 0.9500, places=3)
+
+    def test_triangle(self):
+        gdf = gpd.GeoDataFrame(
+            {
+                "coordinate": [
+                    Point(1, 1),
+                    Point(3, 3),
+                    Point(3, 1),
+                ],
+                "gen": [
+                        np.array([0]),
+                        np.array([3]),
+                        np.array([1]),
+                    ],
+                "load": [
+                    np.array([3]),
+                    np.array([0]),
+                    np.array([1]),
+                ]   
+            },
+            geometry='coordinate',
+            crs="EPSG:4326"
+        )
+        region = RegionGenerator().simple_from_gdf(gdf)
+        grouped_region, score = Brute_Force().group(region, .5)
+        aimed_result = frozenset([
+            frozenset({'X1.000000|Y1.000000', 'X3.000000|Y3.000000'}),
+            frozenset(["X3.000000|Y1.000000"])
+        ])
+        partition = grouped_region.get_partition()
+        self.assertEqual(partition, aimed_result)
+        self.assertAlmostEqual(score, 0.6396, places=3)
+
+    def test_zero(self):
+        gdf = gpd.GeoDataFrame(
+            {
+                "coordinate": [
+                    Point(1, 1),
+                    Point(3, 3),
+                    Point(3, 1),
+                ],
+                "gen": [
+                        np.array([0]),
+                        np.array([0]),
+                        np.array([0]),
+                    ],
+                "load": [
+                    np.array([1]),
+                    np.array([1]),
+                    np.array([0]),
+                ]   
+            },
+            geometry='coordinate',
+            crs="EPSG:4326"
+        )
+        region = RegionGenerator().simple_from_gdf(gdf)
+        grouped_region, score = Brute_Force().group(region, .5)
+        aimed_result = frozenset([
+            frozenset(["X1.000000|Y1.000000"]),
+            frozenset(["X3.000000|Y1.000000"]),
+            frozenset(["X3.000000|Y3.000000"])
+        ])
+        partition = grouped_region.get_partition()
+        self.assertEqual(partition, aimed_result)
+        self.assertAlmostEqual(score, 0.5000, places=3)
+
 
 if __name__ == '__main__':
     unittest.main()

@@ -74,7 +74,7 @@ class Brute_Force(I_Grouping_Algo):
             if best_partition is None or partition_score > best_partition[0]:
                 best_partition = (partition_score, labels)
         
-        return GroupedRegion(region, labels=best_partition[1])
+        return (GroupedRegion(region, labels=best_partition[1]), best_partition[0])
 
 
     def animate(self, ax :plt.Axes):
