@@ -1,9 +1,8 @@
 import unittest
 import numpy as np
-import pandas as pd
+import geopandas as gpd
 from src.data.grouped_region import GroupedRegion
 from src.data_gen.region_generator import RegionGenerator
-import geopandas as gpd
 from shapely.geometry import Point
 
 

@@ -1,8 +1,5 @@
-from tokenize import group
-
-from src.data.region import Region
-import geopandas as gpd
 import numpy as np
+from src.data.region import Region
 
 class GroupedRegion:
 
@@ -91,17 +88,10 @@ class GroupedRegion:
 
     def region_distance_score(self):
         """
-        calculates the  distance score of the region based on the labels
-        
+        returns the relation of the euclidean distance between all houses and the center in realtion to all houses and its groups centers
+
         return: the total distance score of the region in decimal from 0 to 1
         """
-        # calculate eucledian center
-        # calculate eucledian group center
-        # calculate total distance from center to each house
-        # calculate the total distance from each house to its group center
-        # divide total group distance by total distance to get the score.
-        # invert score so that 1 is best and 0 is worst
-
         houses = self.houses.copy()
        
         centroid = houses.geometry.union_all().centroid

@@ -1,11 +1,12 @@
-import secrets
-import pandas as pd
 import geopandas as gpd
 import numpy as np
+import osmnx as ox
+import pandas as pd
+import secrets
 from shapely import Point
 from src.data.region import Region
 from src.data_gen.lpg_wrapper import LPG_Wrapper
-import osmnx as ox
+
 from datetime import date
 
 class RegionGenerator:

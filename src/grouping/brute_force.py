@@ -1,8 +1,6 @@
-import numpy as np
 import matplotlib.pyplot as plt
 from src.grouping.i_grouping_algo import I_Grouping_Algo
 from itertools import combinations
-from collections.abc import Callable 
 from src.data.region import Region
 from src.data.grouped_region import GroupedRegion
 

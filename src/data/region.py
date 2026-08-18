@@ -1,6 +1,8 @@
-from shapely.geometry import Point
-import numpy as np
 import geopandas as gpd
+import numpy as np
+from shapely.geometry import Point
+
+
 
 class Region:
     houses: gpd.GeoDataFrame = None 

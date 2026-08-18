@@ -1,10 +1,9 @@
 import unittest
 import numpy as np
+import geopandas as gpd
 from shapely.geometry import Point
 from src.data.region import Region
 from src.data_gen.region_generator import RegionGenerator
-import geopandas as gpd
-from pandas.testing import assert_frame_equal
 
 
 class Test_RegionGenerator(unittest.TestCase):
