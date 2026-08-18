@@ -1,11 +1,10 @@
 import matplotlib.pyplot as plt
-from src.grouping.i_grouping_algo import I_Grouping_Algo
 from itertools import combinations
 from src.data.region import Region
 from src.data.grouped_region import GroupedRegion
 
 
-class Brute_Force(I_Grouping_Algo):
+class Brute_Force:
 
     def _powerset(self, set : set):
         powerset = [
