@@ -42,7 +42,7 @@ class RegionGenerator:
                         np.array([2,3,1])]   
                 },
                 geometry='coordinate',
-                crs="EPSG:4326"
+                crs="EPSG:3857"
             )
         )
 
@@ -55,18 +55,41 @@ class RegionGenerator:
         """
         return Region(gdf)
 
+    def _random_series(self, n_houses, max_energy, time_steps):
+        return [np.random.randint(1, max_energy, time_steps) for _ in range(n_houses)]
+
     def random(self, n_houses: int = 10, time_steps: int = 24, max_energy: int = 10):
         return Region(
             gpd.GeoDataFrame(
                 {
                     "coordinate": [Point(np.random.uniform(0, 10), np.random.uniform(0, 10)) for _ in range(n_houses)],
-                    "load": [np.random.randint(1, max_energy, time_steps) for _ in range(n_houses)],
-                    "gen": [np.random.randint(1, max_energy, time_steps) for _ in range(n_houses)]
+                    "load": self._random_series(n_houses, max_energy, time_steps),
+                    "gen": self._random_series(n_houses, max_energy, time_steps)
                 },
                 geometry='coordinate',
-                crs="EPSG:4326"
+                crs="EPSG:3857"
             )
         )
+
+    def _import_buildings(self, bbox: tuple):
+        """
+        Import buildings from OpenStreetMap within a bounding box. 
+
+        Return: a GeoDataFrame with building geometries and their centroids in EPSG:4326.
+        """
+        import osmnx as ox
+        osm_tags = {"building": True} 
+        gdf =  ox.features_from_bbox(bbox, tags=osm_tags)
+        if gdf.crs != "EPSG:4326":
+            gdf = gdf.to_crs(epsg=4326)
+
+        # convert to 3857 and back, so the centroid calculation is not in a degree coordinate system
+        gdf_3857 = gdf.to_crs(epsg=3857)
+        centroid_3857 = gpd.GeoSeries(gdf_3857.geometry.centroid)
+        gdf['precise_centroids'] = centroid_3857.to_crs(epsg=4326)
+
+        # eliminate buildings that are not within the bounding box, because the function fetches some buildings that are on the edge of the bbox
+        return gdf[gdf.precise_centroids.within(ox.utils_geo.bbox_to_poly(bbox))]
 
     def geo_random(self, bbox: tuple, time_steps: int, max_energy: int):
         """
@@ -79,36 +102,23 @@ class RegionGenerator:
         - time_steps: length of load/gen time-series
         - max_energy: upper bound for randint generation
         """
-        import osmnx as ox
-        osm_tags = {"building": True, "landuse": "residential"} # 
-        gdf = ox.features_from_bbox(bbox, tags=osm_tags)
-        # eliminate buildings that are not within the bounding box, because the function fetches some buildings that are on the edge of the bbox
-        gdf = gdf.to_crs(epsg=3857)   # so the centroid calculation is not in a degree coordinate system
-        gdf['centroids_4326'] = (gpd.GeoSeries(gdf.geometry.centroid, crs=gdf.crs).to_crs(epsg=4326))
-        gdf = gdf[gdf.centroids_4326.within(ox.utils_geo.bbox_to_poly(bbox))]
-        centroids = gpd.GeoSeries(gdf.geometry.centroid, crs=gdf.crs).to_crs(epsg=4326)
+        gdf = self._import_buildings(bbox)
+
+        centroids = gdf["precise_centroids"]
+        gen = self._random_series(len(gdf), max_energy, time_steps)
+        load = self._random_series(len(gdf), max_energy, time_steps)
         
         return Region(
             gpd.GeoDataFrame(
                 {
                     "coordinate": centroids,
-                    "load": [np.random.randint(1, max_energy, time_steps) for _ in range(len(gdf))],
-                    "gen": [np.random.randint(1, max_energy, time_steps) for _ in range(len(gdf))]
+                    "gen": gen,
+                    "load": load
                 },
                 geometry='coordinate',
                 crs="EPSG:4326"
             )
         )
-
-    def _eliminate_buildings_outside_bbox(self, gdf: gpd.GeoDataFrame, bbox: tuple):
-        """
-        Eliminate buildings that are not within the bounding box, because the function fetches some buildings that are on the edge of the bbox
-
-        Parameters:
-        - gdf: GeoDataFrame with building geometries
-        - bbox: (minx, miny, maxx, maxy)
-        """
-        return gdf[gdf.centroid.within(ox.utils_geo.bbox_to_poly(bbox))]
     
     def _estimate_number_of_household(self, areas: pd.Series):
         """
@@ -142,7 +152,7 @@ class RegionGenerator:
 
         return bell
 
-    def geo_LPG(self, bbox: tuple, time_steps: int, max_energy: int, ):# todo start end, max energy to factor 
+    def geo_LPG(self, bbox: tuple, time_steps: int, max_energy: int, ):# TODO start end, max energy to factor 
         """
         Generate a Region households within a bounding box and assigns load/gen data based on the LoadProfileGenerator program. The house size determins how many households exist in the house. The profiles are realisic profiles based on predefined household configurations.
 
@@ -152,9 +162,7 @@ class RegionGenerator:
         - max_energy: upper bound for randint generation
         """
        
-        osm_tags = {"building": True} 
-        gdf = ox.features_from_bbox(bbox, tags=osm_tags)
-        gdf = self._eliminate_buildings_outside_bbox(gdf, bbox)
+        gdf = self._import_buildings(bbox)
         print(f'found {len(gdf)} buildings')
         gdf["n_hhs"] = self._estimate_number_of_household(gdf.to_crs(epsg=3857).area)
 
@@ -166,7 +174,7 @@ class RegionGenerator:
         return Region(
             gpd.GeoDataFrame(
                 { 
-                    "coordinate": gdf.centroid,  
+                    "coordinate": gdf["precise_centroids"],  
                     "load": load,
                     "gen": gen,
                 },

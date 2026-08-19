@@ -55,7 +55,7 @@ class Region:
             raise ValueError("GeoDataFrame must have a geometry column named 'coordinate'")
 
         # Check that the GeoDataFrame has a valid CRS
-        if not houses.crs == 'EPSG:4326':
+        if not houses.crs in ['EPSG:4326', 'EPSG:3857']:
             raise ValueError("GeoDataFrame must be EPSG:4326")
 
         return houses
@@ -83,4 +83,7 @@ class Region:
             No house can have the same index and the house will keeep the index for the rest of the time.
         """        
         return self.houses["id"]
+
+    def house_amount(self):
+        return self.houses.shape[1]
         

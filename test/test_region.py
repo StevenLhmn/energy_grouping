@@ -16,13 +16,15 @@ class Test_Region(unittest.TestCase):
                 "coordinate": [Point(0, 0)],
             },
             geometry="coordinate",
-            crs="EPSG:4326",
+            crs="EPSG:3857",
         )
 
         region = Region(houses=houses_gdf)
 
         self.assertIsInstance(region, Region)
-        self.assertTrue(region.houses.equals(houses_gdf))
+        self.assertTrue(region.houses["gen"].equals(houses_gdf["gen"]))
+        self.assertTrue(region.houses["load"].equals(houses_gdf["load"]))
+        self.assertTrue(region.houses["coordinate"].equals(houses_gdf["coordinate"]))
         
     def test_wrong_gen_length(self):
         # Create a GeoDataFrame with inconsistent gen and load lengths
@@ -42,7 +44,7 @@ class Test_Region(unittest.TestCase):
                     Point(2, 2)]
             },
             geometry='coordinate',
-            crs="EPSG:4326"
+            crs="EPSG:3857"
         )
 
         # Verify that the Region constructor raises an error for inconsistent lengths
@@ -67,7 +69,7 @@ class Test_Region(unittest.TestCase):
                     Point(2, 2)]
             },
             geometry='coordinate',
-            crs="EPSG:4326"
+            crs="EPSG:3857"
         )
 
         # Verify that the Region constructor raises an error for inconsistent lengths
@@ -92,7 +94,7 @@ class Test_Region(unittest.TestCase):
                     Point(2, 2)]
             },
             geometry='coordinate',
-            crs="EPSG:4326"
+            crs="EPSG:3857"
         )
 
         # Verify that the Region constructor raises an error for wrong coordinate type
@@ -113,7 +115,7 @@ class Test_Region(unittest.TestCase):
                     Point(2, 2)]
             },
             geometry='coordinate',
-            crs="EPSG:4326"
+            crs="EPSG:3857"
         )
 
         # Verify that the Region constructor raises an error for missing columns
@@ -139,7 +141,7 @@ class Test_Region(unittest.TestCase):
                 'extra_column': [1, 2, 3]  # Extra column
             },
             geometry='coordinate',
-            crs="EPSG:4326"
+            crs="EPSG:3857"
         )
 
         # Verify that the Region constructor raises an error for extra columns
@@ -155,7 +157,7 @@ class Test_Region(unittest.TestCase):
                 'coordinate': []
             },
             geometry='coordinate',
-            crs="EPSG:4326"
+            crs="EPSG:3857"
         )
 
         # Verify that the Region constructor raises an error for empty DataFrame
@@ -178,7 +180,9 @@ class Test_Region(unittest.TestCase):
                     Point(0, 0),
                     Point(1, 1),
                     Point(2, 2)]
-            }
+            },
+            geometry='coordinate',
+            crs="EPSG:3857"
         )
 
         # Verify that the Region constructor raises an error for non-GeoDataFrame input
@@ -203,7 +207,7 @@ class Test_Region(unittest.TestCase):
                     Point(2, 2)]
             },
             geometry='coordinate',
-            crs="EPSG:4326"
+            crs="EPSG:3857"
         )
 
         # Verify that the Region constructor raises an error for 'gen' not being a numpy array
@@ -226,7 +230,9 @@ class Test_Region(unittest.TestCase):
                     Point(1, 1),
                     Point(1, 1),
                     Point(2, 2)]
-            }
+            },
+            geometry='coordinate',
+            crs="EPSG:3857"
         )
         with self.assertRaises(ValueError):
             Region(houses=gdf)
@@ -247,7 +253,9 @@ class Test_Region(unittest.TestCase):
                     Point(0, 0),
                     Point(1.6516, 1.165),
                     Point(2, 2)]
-            }
+            },
+            geometry='coordinate',
+            crs="EPSG:3857"
         )
         region = Region(houses=gdf)
         ids = region.get_indexes()

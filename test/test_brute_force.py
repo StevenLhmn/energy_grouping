@@ -54,7 +54,7 @@ class Test_BruteForce(unittest.TestCase):
                 ]   
             },
             geometry='coordinate',
-            crs="EPSG:4326"
+            crs="EPSG:3857"
         )
         grouped_region = Brute_Force().group(RegionGenerator().simple_from_gdf(gdf))
         aimed_result = {
@@ -84,7 +84,7 @@ class Test_BruteForce(unittest.TestCase):
                 ]   
             },
             geometry='coordinate',
-            crs="EPSG:4326"
+            crs="EPSG:3857"
         )
         region = RegionGenerator().simple_from_gdf(gdf)
         grouped_region, score = Brute_Force().group(region, .5)
@@ -117,7 +117,7 @@ class Test_BruteForce(unittest.TestCase):
                 ]   
             },
             geometry='coordinate',
-            crs="EPSG:4326"
+            crs="EPSG:3857"
         )
         region = RegionGenerator().simple_from_gdf(gdf)
         grouped_region, score = Brute_Force().group(region, .1)
@@ -149,7 +149,7 @@ class Test_BruteForce(unittest.TestCase):
                 ]   
             },
             geometry='coordinate',
-            crs="EPSG:4326"
+            crs="EPSG:3857"
         )
         region = RegionGenerator().simple_from_gdf(gdf)
         grouped_region, score = Brute_Force().group(region, .5)
@@ -181,7 +181,7 @@ class Test_BruteForce(unittest.TestCase):
                 ]   
             },
             geometry='coordinate',
-            crs="EPSG:4326"
+            crs="EPSG:3857"
         )
         region = RegionGenerator().simple_from_gdf(gdf)
         grouped_region, score = Brute_Force().group(region, .5)

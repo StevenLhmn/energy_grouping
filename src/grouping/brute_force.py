@@ -2,9 +2,19 @@ import matplotlib.pyplot as plt
 from itertools import combinations
 from src.data.region import Region
 from src.data.grouped_region import GroupedRegion
+from src.grouping.grouping_algo import GroupingAlgo
 
 
-class Brute_Force:
+class Brute_Force(GroupingAlgo):
+
+    def __init__(self, distance_weight: float):
+        self.distance_weight = GroupedRegion._check_weight(distance_weight)
+
+    def __str__(self):
+        if self._partitions:
+            return f"Brute Force (Partitions: {len(self._partitions)})"
+        else:
+            return "Brute Force"
 
     def _powerset(self, set : set):
         powerset = [
@@ -36,7 +46,7 @@ class Brute_Force:
 
         return result
 
-    def group(self, region: Region, distance_weight: float) -> GroupedRegion:
+    def group(self, region: Region) -> GroupedRegion:
         """
         vector_dict: {id -> vector, ...}
         vector: (dim1, dim2, ...)
@@ -57,6 +67,7 @@ class Brute_Force:
 
         # 3. find all partitions of the region
         partitions = self._partitions(set(region.get_indexes()))
+        self._partitions = partitions
 
         #4. calculate the autarky for each partition and find the best one
         best_partition = None
@@ -67,7 +78,7 @@ class Brute_Force:
                 for id in group:
                     labels[id] = label
             grouped_region = GroupedRegion(region, labels=labels)
-            partition_score = grouped_region.region_score(distance_weight)
+            partition_score = grouped_region.region_score(self.distance_weight)
             if best_partition is None or partition_score > best_partition[0]:
                 best_partition = (partition_score, labels)
         

@@ -19,6 +19,12 @@ class GroupedRegion:
         return labels
 
     @staticmethod
+    def _check_weight(weight: float):
+        if not 0 <= weight <= 1:
+            raise ValueError("weight must be between 0 and 1")
+        return weight
+
+    @staticmethod
     def _check_same_shape(arr1, arr2):
         if not isinstance(arr1, np.ndarray) or not isinstance(arr2, np.ndarray):
             raise TypeError("arr1 and arr2 must be numpy arrays")
@@ -93,8 +99,11 @@ class GroupedRegion:
         return: the total distance score of the region in decimal from 0 to 1
         """
         houses = self.houses.copy()
+        if houses.crs != "EPSG:3857":
+            houses = houses.to_crs("EPSG:3857")
        
         centroid = houses.geometry.union_all().centroid
+        
         distance = houses.geometry.distance(centroid).sum()
         group_distance = 0
 
