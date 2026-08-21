@@ -84,6 +84,6 @@ class Region:
         """        
         return self.houses["id"]
 
-    def house_amount(self):
-        return self.houses.shape[1]
+    def house_amount(self):        
+        return self.houses.shape[0]
         
