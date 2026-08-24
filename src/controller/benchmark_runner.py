@@ -1,4 +1,5 @@
 import numpy as np
+import pandas as pd
 from pathlib import Path
 from datetime import datetime
 
@@ -19,16 +20,21 @@ class BenchmarkRunner:
 		house_interval: int,
 		time_step_interval: int,
 		file_location: str | Path = ".",
-	) -> np.ndarray:
+	) -> pd.DataFrame:
 		"""Run every house-count/time-step combination.
 
-		The returned array contains durations in seconds, indexed as
-		``results[house_index][time_step_index]``.
+		The returned DataFrame contains durations in seconds, with house counts
+		as row labels and time-step counts as column labels.
 		The same array is saved as a comma-separated CSV file.
 		"""
 		house_counts = self._values(max_houses, house_interval, "house")
 		time_steps = self._values(max_time_steps, time_step_interval, "time-step")
-		results = np.empty((len(house_counts), len(time_steps)), dtype=float)
+		results = pd.DataFrame(
+			index=list(house_counts),
+			columns=list(time_steps),
+		)
+		results.index.name = "house_count"
+		results.columns.name = "time_step_count"
 
 		for house_index, house_count in enumerate(house_counts):
 			for time_step_index, time_step_count in enumerate(time_steps):
@@ -37,14 +43,17 @@ class BenchmarkRunner:
 					time_steps=time_step_count,
 					max_energy=self.max_energy,
 				)
-				results[house_index, time_step_index] = Measurement(
+				results.iloc[house_index, time_step_index] = Measurement(
 					region, self.algo
-				).get_duration()
+				)
+			print(
+				f'finished house {house_count}/{max_houses} in '
+				f'{results.iloc[house_index, time_step_index].get_duration():.3f} seconds')
 
 		file_location = Path(file_location)
 		file_location.mkdir(parents=True, exist_ok=True)
 		output_file = file_location / self.file_name()
-		np.savetxt(output_file, results, delimiter=",", fmt="%.9f")
+		results.to_csv(output_file, float_format="%.9f")
 		return results
 
 	@staticmethod

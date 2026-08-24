@@ -4,6 +4,7 @@ from tempfile import TemporaryDirectory
 from unittest.mock import Mock
 
 import numpy as np
+import pandas as pd
 
 from src.controller.benchmark_runner import BenchmarkRunner
 
@@ -19,12 +20,15 @@ class TestBenchmarkRunner(unittest.TestCase):
         with TemporaryDirectory() as directory:
             output_file = Path(directory) / "results.csv"
             results = runner.run(100, 30, 10, 10, output_file)
-            saved_results = np.loadtxt(output_file, delimiter=",")
+            saved_results = pd.read_csv(output_file, index_col=0)
 
         self.assertEqual(results.shape, (10, 3))
-        self.assertTrue(np.all(results >= 0))
-        self.assertEqual(saved_results.shape, results.shape)
-        self.assertTrue(np.allclose(saved_results, results))
+        self.assertEqual(list(results.index), list(range(10, 101, 10)))
+        self.assertEqual(list(results.columns), ["10", "20", "30"])
+        self.assertTrue((results.to_numpy() >= 0).all())
+        self.assertTrue(np.allclose(saved_results.to_numpy(), results.to_numpy()))
+        self.assertEqual(list(saved_results.index), list(results.index.astype(str)))
+        self.assertEqual(list(saved_results.columns), list(results.columns))
         self.assertEqual(generator.random.call_count, 30)
 
     def test_run_rejects_non_positive_intervals(self):

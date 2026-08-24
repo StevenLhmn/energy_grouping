@@ -11,14 +11,18 @@ class Measurement:
         """Run the algorithm for a region and return the duration in seconds."""
         self.region = region
         self.start = perf_counter()
-        self.grouped_region = self.algo.group(self.region)
+        self.grouped_region, self.algo_info = self.algo.group(self.region)
         self.end = perf_counter()
         return self.get_duration()
 
     def __str__(self):
+        duration = self.get_duration()
+        return f'{duration:.6f}'
+
+    def __repr__(self):
         n_houses = self.region.house_amount()
         duration = self.get_duration()
-        return f'{self.algo}: {n_houses} Houses in {duration:.3f} seconds'
+        return f'{self.algo} {self.algo_info}: {n_houses} Houses in {duration:.3f} seconds'
 
     def get_duration(self) -> float:
         """

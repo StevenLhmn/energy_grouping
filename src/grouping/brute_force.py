@@ -11,9 +11,6 @@ class Brute_Force(GroupingAlgo):
         self.distance_weight = GroupedRegion._check_weight(distance_weight)
 
     def __str__(self):
-        if self._partitions:
-            return f"Brute Force (Partitions: {len(self._partitions)})"
-        else:
             return "Brute Force"
 
     def _powerset(self, set : set):
@@ -67,7 +64,6 @@ class Brute_Force(GroupingAlgo):
 
         # 3. find all partitions of the region
         partitions = self._partitions(set(region.get_indexes()))
-        self._partitions = partitions
 
         #4. calculate the autarky for each partition and find the best one
         best_partition = None
@@ -82,7 +78,10 @@ class Brute_Force(GroupingAlgo):
             if best_partition is None or partition_score > best_partition[0]:
                 best_partition = (partition_score, labels)
         
-        return (GroupedRegion(region, labels=best_partition[1]), best_partition[0])
+        return (
+            GroupedRegion(region, labels=best_partition[1]),
+            f'(Partitions: {len(partitions)})',
+        )
 
 
     def animate(self, ax :plt.Axes):
