@@ -86,4 +86,7 @@ class Region:
 
     def house_amount(self):        
         return self.houses.shape[0]
-        
+
+    def get_diffs(self):
+        diffs = self.houses["gen"] - self.houses["load"]
+        return diffs.to_list()

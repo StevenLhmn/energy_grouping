@@ -284,6 +284,36 @@ class Test_Region(unittest.TestCase):
         with self.assertRaises(ValueError):
             Region(houses=gdf)
 
+    def test_diffs(self):
+        gdf = gpd.GeoDataFrame(
+            {
+                'gen': [
+                    np.array([1, 2, 3]),
+                    np.array([4, 5, 6]),
+                    np.array([7, 8, 9])],
+                'load': [
+                    np.array([9, 8, 7]),
+                    np.array([6, 5, 4]),
+                    np.array([3, 2, 1])],
+                'coordinate': [
+                    Point(0, 0),
+                    Point(1.6516, 1.165),
+                    Point(2, 2)]
+            },
+            geometry='coordinate',
+            crs="EPSG:3857"
+        )
+        region = Region(gdf)
+        diffs = region.get_diffs()
+
+        expected_result = [
+                    np.array([-8, -6, -4]),
+                    np.array([-2, 0, 2]),
+                    np.array([4, 6, 8])]
+        for i in range(3):
+            for j in range(3):
+                self.assertEquals(diffs[i][j], expected_result[i][j])
+
 
 if __name__ == '__main__':
     unittest.main()

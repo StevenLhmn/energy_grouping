@@ -1,6 +1,5 @@
 import geopandas as gpd
 import numpy as np
-import osmnx as ox
 import pandas as pd
 import secrets
 from shapely import Point
