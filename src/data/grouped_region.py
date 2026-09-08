@@ -1,4 +1,5 @@
 import numpy as np
+import pandas as pd
 from src.data.region import Region
 
 class GroupedRegion:
@@ -10,6 +11,10 @@ class GroupedRegion:
         self.houses["label"] = self.houses["id"].map(self._check_labels(labels))
 
     def _check_labels(self, labels: dict[str: int]):
+        if labels is None:
+            raise ValueError(f'Labels is None')
+        if not isinstance(labels, dict):
+            raise ValueError(f'labels in not a dict') 
         #TODO: check if labels are valid 
         #not empty
         #keys unique
@@ -137,3 +142,20 @@ class GroupedRegion:
             group = self.houses[self.houses["label"] == label]
             partition[label] = frozenset(group["id"].tolist())
         return frozenset(partition.values())
+
+    def get_group_centroids(self):
+        centroids = pd.DataFrame(columns=["x", "y", "label", ])
+        for label in self.houses["label"].unique():
+            group = self.houses[self.houses["label"] == label]
+            centroid = group.geometry.union_all().centroid
+            centroids = pd.concat([centroids, pd.DataFrame({"x": [centroid.x], "y": [centroid.y], "label": [label]})], ignore_index=True)
+        return centroids
+
+    def get_autarky_without_groups(self):
+        self_cons = 0
+        load = 0
+        for _, row in self.houses.iterrows():
+            self_cons += self.group_self_consumption(row["gen"], row["load"]).sum()
+            load += row["load"].sum()
+        autarky = self_cons/load if load > 0 else 1
+        return autarky

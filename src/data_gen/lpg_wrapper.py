@@ -6,29 +6,24 @@ import stat
 from datetime import date
 from pathlib import Path
 from pylpg import lpg_execution, lpgdata
+from src.utilities.seed_container import Seed_Container
 
 class LPG_Wrapper():
     hh_names = []
-    seed = None
+    seed_container: Seed_Container = None
     house_names = []
 
     def __init__(self, seed: int):
-        if seed is None:
-            raise ValueError(f'seed is None')
-        elif not seed >= 0:
-            raise ValueError(f'seed is {seed} but may not be below 0')
-        elif seed > 2**32:
-            raise ValueError(f'seed is {seed} but may not be above 2**32')
-        self.seed = seed
+        self.seed_container = Seed_Container
         self.hh_names = self._get_hh_name_list()
         self.house_names = self._get_house_name_list()
 
     def _get_hh_name_list(self):
         hhs = [
-                name 
-                for name, value in vars(lpgdata.Households).items() 
-                if not name.startswith("_")
-            ]
+            name 
+            for name, value in vars(lpgdata.Households).items() 
+            if not name.startswith("_")
+        ]
 
         return hhs
     
@@ -95,6 +90,7 @@ class LPG_Wrapper():
             startdate=start.strftime("%Y-%m-%d"),
             enddate=end.strftime("%Y-%m-%d"),
             clear_previous_calc=True,
+            random_seed=self.seed_container.seed()
         )
         print(data.columns)
         print(data.dtypes)

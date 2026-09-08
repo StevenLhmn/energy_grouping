@@ -1,16 +1,16 @@
 from abc import ABC, abstractmethod
-import matplotlib.pyplot as plt
+from src.data.grouped_region import GroupedRegion
 
 
 class GroupingAlgo(ABC):
     @abstractmethod
-    def group(self) -> None:
+    def group(self) -> GroupedRegion:
         """Group the regions."""
         pass
 
     @abstractmethod
-    def animate(self, ax: plt.Axes) -> None:
-        """Show an animation of the algorithm."""
+    def get_trajectory(self) -> None:
+        """Get the animation data in form of trajectory object."""
         pass
 
     @abstractmethod

@@ -1,25 +1,18 @@
 import geopandas as gpd
 import numpy as np
 import pandas as pd
-import secrets
 from shapely import Point
+from src.utilities.seed_container import Seed_Container
 from src.data.region import Region
 from src.data_gen.lpg_wrapper import LPG_Wrapper
 
 from datetime import date
 
 class RegionGenerator:
-    seed: int = None
+    seed_container: Seed_Container = None
 
     def __init__(self, seed: int = None):
-        if seed is None:
-            seed = secrets.randbelow(2**32)
-        elif seed <= 0:
-            raise ValueError(f'seed is {seed} but may not be below 0')
-        elif seed > 2**32:
-            raise ValueError(f'seed is {seed} but may not be above 2**32')
-        self.seed = seed
-        np.random.seed(self.seed)
+        self.seed_container = Seed_Container(seed)
 
     def simple(self):
         return self.simple_from_gdf(
@@ -55,13 +48,23 @@ class RegionGenerator:
         return Region(gdf)
 
     def _random_series(self, n_houses, max_energy, time_steps):
-        return [np.random.randint(1, max_energy, time_steps) for _ in range(n_houses)]
+        return [
+            self.seed_container.rng().integers(
+                0,
+                max_energy,
+                size=time_steps
+                )
+            for _ in range(n_houses)]
 
     def random(self, n_houses: int = 10, time_steps: int = 24, max_energy: int = 10):
         return Region(
             gpd.GeoDataFrame(
                 {
-                    "coordinate": [Point(np.random.uniform(0, 10), np.random.uniform(0, 10)) for _ in range(n_houses)],
+                    "coordinate": [
+                        Point(
+                            self.seed_container.rng().integers(0, 10),
+                            self.seed_container.rng().integers(0, 10)) for _ in range(n_houses)
+                        ],
                     "load": self._random_series(n_houses, max_energy, time_steps),
                     "gen": self._random_series(n_houses, max_energy, time_steps)
                 },
@@ -166,7 +169,7 @@ class RegionGenerator:
         gdf["n_hhs"] = self._estimate_number_of_household(gdf.to_crs(epsg=3857).area)
 
         gen = [self._generate_gen_profile(area, time_steps, max_energy) for area in gdf.to_crs(epsg=3857).area]
-        load = [LPG_Wrapper(self.seed).generate_appartment(n_hhs, date(2022, 4, 1), date(2022, 4, 1), "1h")
+        load = [LPG_Wrapper(self.seed_container.seed()).generate_appartment(n_hhs, date(2022, 4, 1), date(2022, 4, 1), "1h")
             for n_hhs in gdf["n_hhs"]
         ]
         
