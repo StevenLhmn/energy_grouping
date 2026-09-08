@@ -11,8 +11,10 @@ from datetime import date
 class RegionGenerator:
     seed_container: Seed_Container = None
 
-    def __init__(self, seed: int = None):
-        self.seed_container = Seed_Container(seed)
+    def __init__(self, seed_container: Seed_Container = None):
+        if seed_container is None:
+            seed_container = Seed_Container()
+        self.seed_container = seed_container
 
     def simple(self):
         return self.simple_from_gdf(
@@ -154,7 +156,7 @@ class RegionGenerator:
 
         return bell
 
-    def geo_LPG(self, bbox: tuple, time_steps: int, max_energy: int, ):# TODO start end, max energy to factor 
+    def geo_LPG(self, bbox: tuple, time_steps: int, max_energy: int):# TODO start end, max energy to factor 
         """
         Generate a Region households within a bounding box and assigns load/gen data based on the LoadProfileGenerator program. The house size determins how many households exist in the house. The profiles are realisic profiles based on predefined household configurations.
 

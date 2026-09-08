@@ -9,10 +9,11 @@ class Seed_Container:
             raise ValueError(f'seed is {seed} but may not be below 0')
         elif seed > 2**32:
             raise ValueError(f'seed is {seed} but may not be above 2**32')
-        self.seed = seed
+        self._seed = seed
+        self._rng = np.random.default_rng(seed)
 
     def seed(self):
-        return self.seed
+        return self._seed
 
     def rng(self) -> np.random.Generator:
-        return np.random.default_rng(self.seed)
+        return self._rng
