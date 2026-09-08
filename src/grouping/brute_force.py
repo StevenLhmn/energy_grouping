@@ -43,7 +43,7 @@ class Brute_Force(GroupingAlgo):
 
         return result
 
-    def group(self, region: Region) -> GroupedRegion:
+    def group(self, region: Region, animate=True) -> GroupedRegion:
         """
         vector_dict: {id -> vector, ...}
         vector: (dim1, dim2, ...)
@@ -78,13 +78,9 @@ class Brute_Force(GroupingAlgo):
             if best_partition is None or partition_score > best_partition[0]:
                 best_partition = (partition_score, labels)
         
-        return (
-            GroupedRegion(region, labels=best_partition[1]),
-            f'(Partitions: {len(partitions)})',
-        )
+        return GroupedRegion(region, labels=best_partition[1])
 
 
-    def animate(self, ax :plt.Axes):
-        """Show an animatoin of the algo"""
+    def get_trajectory(self):
         pass
         

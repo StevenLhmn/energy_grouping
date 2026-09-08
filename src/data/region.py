@@ -1,12 +1,13 @@
 import geopandas as gpd
 import numpy as np
 from shapely.geometry import Point
+from src.utilities.seed_container import Seed_Container
 
 
 
 class Region:
     houses: gpd.GeoDataFrame = None 
-    def __init__(self, houses):
+    def __init__(self, houses, seed: int = None):
         '''
             houses is a gdf with columns ['gen', 'load', 'coordinate']
             in gen and load are np.ndarrays with the same lenghth
@@ -15,6 +16,7 @@ class Region:
         '''
         self.houses = self._check_houses(houses).copy()
         self._index_houses()
+        self.seed_container = Seed_Container(seed)
 
 
     def _check_houses(self, houses):
@@ -77,6 +79,8 @@ class Region:
 
         self.houses["id"] = ids
 
+    def get_seed(self):
+        return self.seed_container.seed
 
     def get_indexes(self) -> list[str]:
         """
