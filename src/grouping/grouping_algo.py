@@ -18,4 +18,4 @@ class GroupingAlgo(ABC):
     @abstractmethod
     def __str__(self) -> str:
         """Return a readable algorithm name."""
-        return
+        pass
