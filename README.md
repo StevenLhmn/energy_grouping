@@ -49,7 +49,7 @@ at least one test per method. a test of how the method should work. (Positive)
 Things to consider testing, every parameter different. not none, correct type, Violation of its constrains. And extreme cases. (Negative)
 
 ## Convention
-private functions below public ones
+private functions below public ones below system ones
 
 #### class and function namings
 idk yet
