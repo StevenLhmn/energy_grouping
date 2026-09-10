@@ -18,12 +18,14 @@ class Animation:
             print(f'trajectory was empty')
             return
         frames = trajectory.get_frames()
-        print(frames)
+        for frame in frames:
+            frame.layout = go.Layout(title_text=str(frame.name))
         self.fig = go.Figure(
             data=frames[0].data,
             frames=frames,
         )
         self._layout()
+        self.fig.update_layout(title_text=str(frames[0].name))
         self.fig.show()
 
     def _layout(self):
@@ -38,7 +40,8 @@ class Animation:
                             "args": [
                                 None,
                                 {
-                                    "frame": {"duration": 1000},
+                                    "frame": {"duration": 1000, "redraw": True},
+                                    "transition": {"duration": 0},
                                     "fromcurrent": True,
                                 },
                             ],
