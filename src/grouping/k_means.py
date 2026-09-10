@@ -6,14 +6,23 @@ from src.data.region import Region
 from src.data.grouped_region import GroupedRegion
 from src.grouping.grouping_algo import GroupingAlgo
 from src.animation.trajectory import Trajectory
+from src.utilities.seed_container import Seed_Container
+from sklearn.cluster._kmeans import kmeans_plusplus
+from sklearn.metrics import pairwise_distances_argmin
 
 class K_Means(GroupingAlgo):
-
-    def __init__(self, distance_weight: float, n_cluster: int, iters: int):
+    sc : Seed_Container = None
+    def __init__(
+        self,
+        seed_container: Seed_Container,
+        distance_weight: float,
+        n_cluster: int,
+        iters: int):
         self.n_cluster = n_cluster #TODO check cluster
         self.distance_weight = GroupedRegion._check_weight(distance_weight)
         self.iters = self._check_iters(iters)
         self.trajectory = Trajectory()
+        self.sc = seed_container
 
     def group(self, region: Region, animate: bool = True) -> GroupedRegion:
         houses = region.houses.copy()[["id", "coordinate"]]
@@ -23,9 +32,24 @@ class K_Means(GroupingAlgo):
         houses['diffs'] = region.get_diffs()
         data = np.column_stack((houses[["x", "y"]].to_numpy(), np.asarray(houses["diffs"].tolist())))
         data_scaled = StandardScaler().fit_transform(data)
+        feature_weights = np.concatenate((
+            np.full(2, self.distance_weight),
+            np.full(data_scaled.shape[1] - 2, 1 - self.distance_weight),
+        ))
+        data_scaled *= feature_weights
+        
 
         if animate and self.iters > 1:
-            for i in range(self.iters - 1):
+            centers, indices = kmeans_plusplus(
+                data_scaled,
+                n_clusters=self.n_cluster,
+                random_state=self.sc.seed()
+            )
+            initial_labels = pairwise_distances_argmin(data_scaled, centers)
+            labels_by_id = dict(zip(region.get_indexes(), initial_labels))
+            grouped_region = GroupedRegion(region=region, labels=labels_by_id)
+            self._update_trajectory(grouped_region, 0)
+            for i in range(1, self.iters - 1):
                 self._cluster(data_scaled, i, region)
 
         grouped_region = self._cluster(data_scaled, self.iters, region)
@@ -36,7 +60,7 @@ class K_Means(GroupingAlgo):
         kmeans = KMeans(
             n_clusters=self.n_cluster,
             max_iter=i,
-            random_state=region.get_seed())
+            random_state=self.sc.seed())
         labels = kmeans.fit_predict(data)
         labels_by_id = dict(zip(region.get_indexes(), labels))
         grouped_region = GroupedRegion(region=region, labels=labels_by_id)
