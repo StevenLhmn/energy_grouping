@@ -18,7 +18,7 @@ class Genetic(GroupingAlgo):
         """
         self.distance_weight = GroupedRegion._check_weight(distance_weight)
         self.iters = self._check_iters(iters)
-        self.trajectory = Trajectory()
+        self._trajectory = Trajectory()
         self.sc = seed_container
 
     def __str__(self) -> str:
@@ -30,7 +30,6 @@ class Genetic(GroupingAlgo):
         if not isinstance(region, Region):
             raise TypeError(f"region must be a Region. But was {type(region)}")
 
-        self._trajectory = Trajectory()
         population = self._init_population(region)
         fitness = self._determine_fitness(population, region)
         if animate:
@@ -127,7 +126,7 @@ class Genetic(GroupingAlgo):
             region,
             self._labels_from_chromosome(best, region)
         )
-        houses = region.houses.to_crs("EPSG:4326")
+        houses = region.houses
         ids = houses["id"]
         x = np.array([coord.x for coord in houses["coordinate"]])
         y = np.array([coord.y for coord in houses["coordinate"]])
