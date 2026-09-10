@@ -4,7 +4,7 @@ import geopandas as gpd
 from shapely.geometry import Point
 from src.data.region import Region
 from src.data_gen.region_generator import RegionGenerator
-
+from src.utilities.seed_container import Seed_Container
 
 class Test_RegionGenerator(unittest.TestCase):
 
@@ -65,7 +65,8 @@ class Test_RegionGenerator(unittest.TestCase):
         self.assertTrue(region_from_gdf.houses.id.tolist() == ['X0.000000|Y0.000000', 'X1.000000|Y1.000000', 'X2.000000|Y2.000000', 'X3.000000|Y3.000000'])
 
     def test_random_region_generation(self):
-        generator = RegionGenerator(seed=42)
+        sc = Seed_Container(seed=42)
+        generator = RegionGenerator(seed_container=sc)
         n_houses = 5
         time_steps = 10
         max_energy = 20

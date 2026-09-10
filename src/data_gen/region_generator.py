@@ -52,28 +52,35 @@ class RegionGenerator:
     def _random_series(self, n_houses, max_energy, time_steps):
         return [
             self.seed_container.rng().integers(
-                0,
+                1,
                 max_energy,
                 size=time_steps
                 )
             for _ in range(n_houses)]
 
     def random(self, n_houses: int = 10, time_steps: int = 24, max_energy: int = 10):
-        return Region(
-            gpd.GeoDataFrame(
-                {
-                    "coordinate": [
-                        Point(
-                            self.seed_container.rng().integers(0, 10),
-                            self.seed_container.rng().integers(0, 10)) for _ in range(n_houses)
-                        ],
-                    "load": self._random_series(n_houses, max_energy, time_steps),
-                    "gen": self._random_series(n_houses, max_energy, time_steps)
-                },
-                geometry='coordinate',
-                crs="EPSG:3857"
-            )
+        # create non duplicate coordinates points list
+        points = set()
+        while len(points) < n_houses:
+            x = self.seed_container.rng().integers(1, 100)
+            y = self.seed_container.rng().integers(1, 100)
+            points.add((x, y))
+        gdf = gpd.GeoDataFrame(
+            {
+                "coordinate": [
+                    Point(
+                        x,
+                        y
+                    )
+                    for x, y in points
+                ],
+                "load": self._random_series(n_houses, max_energy, time_steps),
+                "gen": self._random_series(n_houses, max_energy, time_steps)
+            },
+            geometry='coordinate',
+            crs="EPSG:3857"
         )
+        return Region(gdf)        
 
     def _import_buildings(self, bbox: tuple):
         """

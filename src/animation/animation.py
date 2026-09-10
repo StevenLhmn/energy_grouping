@@ -11,6 +11,12 @@ class Animation:
         if trajectory is None:
             print("no trajectory given to play")
             return
+        elif not isinstance(trajectory, Trajectory):
+            print(f'no trajectory given to play, type was {type(trajectory)}')
+            return
+        elif trajectory.get_frames() == []:
+            print(f'trajectory was empty')
+            return
         frames = trajectory.get_frames()
         print(frames)
         self.fig = go.Figure(
@@ -32,7 +38,7 @@ class Animation:
                             "args": [
                                 None,
                                 {
-                                    "frame": {"duration": 500},
+                                    "frame": {"duration": 1000},
                                     "fromcurrent": True,
                                 },
                             ],
