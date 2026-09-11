@@ -29,6 +29,7 @@ class Animation:
         self.fig.show()
 
     def _layout(self):
+        frames = list(self.fig.frames)
         self.fig.update_layout(
             updatemenus=[
                 {
@@ -48,5 +49,26 @@ class Animation:
                         }
                     ],
                 }
-            ]
+            ],
+            sliders=[
+                {
+                    "active": 0,
+                    "currentvalue": {"prefix": "Frame: "},
+                    "steps": [
+                        {
+                            "label": str(frame.name),
+                            "method": "animate",
+                            "args": [
+                                [frame.name],
+                                {
+                                    "frame": {"duration": 0, "redraw": True},
+                                    "transition": {"duration": 0},
+                                    "mode": "immediate",
+                                },
+                            ],
+                        }
+                        for frame in frames
+                    ],
+                }
+            ],
         )
