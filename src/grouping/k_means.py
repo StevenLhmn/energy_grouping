@@ -10,6 +10,7 @@ from src.animation.trajectory import Trajectory
 from src.utilities.seed_container import Seed_Container
 from sklearn.cluster._kmeans import kmeans_plusplus
 from sklearn.metrics import pairwise_distances_argmin
+from collections.abc import Iterator
 
 class K_Means(GroupingAlgo):
     sc : Seed_Container = None
@@ -24,8 +25,15 @@ class K_Means(GroupingAlgo):
         self.iters = self._check_iters(iters)
         self.trajectory = Trajectory()
         self.sc = seed_container
+        self.result = None
 
-    def group(self, region: Region, animate: bool = True) -> GroupedRegion:
+    def group(self, region: Region, animate: bool = True) -> Iterator[go.Frame]:
+        """Yield clustering frames and save the final result internally."""
+        if not isinstance(region, Region):
+            raise TypeError(f"region must be a Region. But was {type(region)}")
+
+        self.trajectory = Trajectory()
+        self.result = None
         houses = region.houses.copy()[["id", "coordinate"]]
         houses = houses.to_crs('EPSG:4326')
         houses['x'] = [coord.x  for coord in houses['coordinate']]
@@ -49,13 +57,23 @@ class K_Means(GroupingAlgo):
             initial_labels = pairwise_distances_argmin(data_scaled, centers)
             labels_by_id = dict(zip(region.get_indexes(), initial_labels))
             grouped_region = GroupedRegion(region=region, labels=labels_by_id)
-            self._update_trajectory(grouped_region, 0)
-            for i in range(1, self.iters - 1):
-                self._cluster(data_scaled, i, region)
+            yield self._update_trajectory(grouped_region, 0)
 
-        grouped_region = self._cluster(data_scaled, self.iters, region)
+        for i in range(1, self.iters):
+            grouped_region = self._cluster(data_scaled, i, region)
+            if animate:
+                yield self._update_trajectory(grouped_region, i)
 
-        return grouped_region
+        if self.iters == 1:
+            grouped_region = self._cluster(data_scaled, self.iters, region)
+            if animate:
+                yield self._update_trajectory(grouped_region, self.iters)
+
+        self.result = grouped_region
+
+    def get_result(self) -> GroupedRegion:
+        """Return the result produced by the most recently consumed run."""
+        return self.result
 
     def _cluster(self, data, i, region):
         kmeans = KMeans(
@@ -65,8 +83,6 @@ class K_Means(GroupingAlgo):
         labels = kmeans.fit_predict(data)
         labels_by_id = dict(zip(region.get_indexes(), labels))
         grouped_region = GroupedRegion(region=region, labels=labels_by_id)
-        self._update_trajectory(grouped_region, i)
-
         return grouped_region
 
     def get_trajectory(self):
@@ -91,9 +107,16 @@ class K_Means(GroupingAlgo):
         frame = go.Frame(
             name=str(f'iteration {i}'),
             data=[],
+            layout=go.Layout(
+                meta={"score": float(grouped_region.region_score(self.distance_weight))}
+            ),
         )
 
-        marker_sizes = np.maximum(abs(diffs / diffs.max()) * 20, 7)
+        max_diff = np.max(np.abs(diffs), initial=0)
+        if max_diff == 0:
+            marker_sizes = np.full(len(diffs), 10.0)
+        else:
+            marker_sizes = np.maximum(np.abs(diffs) / max_diff * 20, 7)
         for label, color in colors.items():
             mask = np.array(labels) == label
             frame.data += (go.Scatter(
@@ -125,6 +148,7 @@ class K_Means(GroupingAlgo):
             ),)
 
         self.trajectory.log(frame)
+        return frame
 
     def _check_iters(self, iters):
         if iters is None:

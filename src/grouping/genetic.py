@@ -1,6 +1,7 @@
 import numpy as np
 import plotly.graph_objects as go
 from plotly.colors import qualitative
+from collections.abc import Iterator
 from src.data.grouped_region import GroupedRegion
 from src.grouping.grouping_algo import GroupingAlgo
 from src.data.region import Region
@@ -12,7 +13,7 @@ class Genetic(GroupingAlgo):
     distance_weight: float = None
     sc: Seed_Container = None
 
-    def __init__(self, seed_container: Seed_Container, distance_weight: float, iters: int = 10):
+    def __init__(self, seed_container: Seed_Container, distance_weight: float, n_groups : int, iters: int = 10):
         """
         distance weight: float, 0-1
         iters: int, 0-intmax
@@ -21,35 +22,42 @@ class Genetic(GroupingAlgo):
         self.iters = self._check_iters(iters)
         self._trajectory = Trajectory()
         self.sc = seed_container
+        self.n_groups = n_groups
+        self.result = None
 
     def __str__(self) -> str:
             """Return a readable algorithm name."""
             return "Genetic"
 
-    def group(self, region: Region, animate: bool = True) -> GroupedRegion:
-        """Group the regions."""
+    def group(self, region: Region, animate: bool = True) -> Iterator[go.Frame]:
+        """Yield optimization frames and save the final result internally."""
         if not isinstance(region, Region):
             raise TypeError(f"region must be a Region. But was {type(region)}")
 
+        self._trajectory = Trajectory()
+        self.result = None
         population = self._init_population(region)
         fitness = self._determine_fitness(population, region)
         if animate:
-            self._update_trajectory(region, population, fitness, 0)
+            yield self._update_trajectory(region, population, fitness, 0)
 
         for i in range(1, self.iters):
-             left_over = self._select(population, fitness)
-             population = self._crossover(left_over, region.house_amount())
-             population = self._mutate(population)
-             fitness = self._determine_fitness(population, region)
-             if animate:
-                self._update_trajectory(region, population, fitness, i)
+            left_over = self._select(population, fitness)
+            population = self._crossover(left_over, region.house_amount())
+            population = self._mutate(population)
+            fitness = self._determine_fitness(population, region)
+            if animate:
+                yield self._update_trajectory(region, population, fitness, i)
 
         best = population[int(np.argmax(fitness))]
-        grouped_region = GroupedRegion(
+        self.result = GroupedRegion(
             region,
             self._labels_from_chromosome(best, region)
         )
-        return grouped_region
+
+    def get_result(self) -> GroupedRegion:
+        """Return the result produced by the most recently consumed run."""
+        return self.result
     def get_trajectory(self) -> Trajectory:
         """Get the animation data in form of trajectory object."""
         return self._trajectory
@@ -60,7 +68,7 @@ class Genetic(GroupingAlgo):
         house_count = region.house_amount()
         population_size = max(4, min(20, house_count * 2))
         return [
-            self.sc.rng().integers(0, house_count, size=house_count, dtype=int)
+            self.sc.rng().integers(0, self.n_groups, size=house_count, dtype=int)
             for _ in range(population_size)
         ]
 
@@ -98,9 +106,9 @@ class Genetic(GroupingAlgo):
         house_count = len(population[0])
         mutated = [np.array(chromosome, dtype=int, copy=True) for chromosome in population]
         for chromosome in mutated[1:]:
-            if self.sc.rng().random() < 0.2:
+            if self.sc.rng().random() < 0.7:
                 index = self.sc.rng().integers(0, house_count)
-                chromosome[index] = self.sc.rng().integers(0, house_count)
+                chromosome[index] = self.sc.rng().integers(0, self.n_groups)
         return mutated
 
     def _labels_from_chromosome(self, chromosome, region: Region):
@@ -139,27 +147,35 @@ class Genetic(GroupingAlgo):
             gen[0] - load[0]
             for gen, load in zip(houses["gen"], houses["load"])
         ])
-        sizes = np.abs(diffs)
-        sizes = np.full(len(sizes), 10) if not sizes.max(initial=0) else np.maximum(sizes / sizes.max() * 20, 7)
-        grouped_houses = houses.copy()
-        grouped_houses["label"] = labels
-        centroids = grouped_region.get_group_centroids()
-
+        sizes = np.nan_to_num(np.abs(diffs), nan=0.0, posinf=0.0, neginf=0.0)
+        max_size = np.max(sizes, initial=0)
+        if max_size == 0:
+            sizes = np.full(len(sizes), 10.0)
+        else:
+            sizes = np.maximum(sizes / max_size * 20, 7)
         frame = go.Frame(
             name=str(f'iteration {i}'),
             data=[],
+            layout=go.Layout(
+                meta={"score": float(fitness.max())},
+                title_text=(
+                    f"iteration {i} | score {fitness.max():.3f} | "
+                    f"groups {len(set(labels))}"
+                )
+            ),
         )
 
-        for label, color in colors.items():
-            mask = np.array(labels) == label
-            frame.data += (go.Scatter(
-                x=x[mask],
-                y=y[mask],
-                mode="markers",
-                marker=dict(size=sizes[mask], color=color),
-                text=ids[mask].tolist(),
-                name=f"Label {label}",
-                legendgroup=f"label-{label}",
-            ),)
+        point_colors = [colors[label] for label in labels]
+        frame.data += (go.Scatter(
+            x=x,
+            y=y,
+            mode="markers",
+            marker=dict(size=sizes, color=point_colors),
+            text=ids.tolist(),
+            customdata=np.asarray(labels),
+            name="Houses",
+            hovertemplate="House %{text}<br>Group %{customdata}<extra></extra>",
+        ),)
 
         self._trajectory.log(frame)
+        return frame
