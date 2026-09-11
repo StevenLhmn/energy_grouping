@@ -1,5 +1,6 @@
 import numpy as np
 import plotly.graph_objects as go
+from plotly.colors import qualitative
 from src.data.grouped_region import GroupedRegion
 from src.grouping.grouping_algo import GroupingAlgo
 from src.data.region import Region
@@ -49,7 +50,6 @@ class Genetic(GroupingAlgo):
             self._labels_from_chromosome(best, region)
         )
         return grouped_region
-
     def get_trajectory(self) -> Trajectory:
         """Get the animation data in form of trajectory object."""
         return self._trajectory
@@ -131,28 +131,35 @@ class Genetic(GroupingAlgo):
         x = np.array([coord.x for coord in houses["coordinate"]])
         y = np.array([coord.y for coord in houses["coordinate"]])
         labels = list(grouped_region.get_labels().values())
+        colors = {
+            label: qualitative.Plotly[int(label) % len(qualitative.Plotly)]
+            for label in sorted(set(labels))
+        }
         diffs = np.array([
             gen[0] - load[0]
             for gen, load in zip(houses["gen"], houses["load"])
         ])
         sizes = np.abs(diffs)
-        sizes = np.full(len(sizes), 10) if not sizes.max(initial=0) else sizes / sizes.max() * 20
+        sizes = np.full(len(sizes), 10) if not sizes.max(initial=0) else np.maximum(sizes / sizes.max() * 20, 7)
         grouped_houses = houses.copy()
         grouped_houses["label"] = labels
+        centroids = grouped_region.get_group_centroids()
 
         frame = go.Frame(
             name=str(f'iteration {i}'),
-            data=[
-                go.Scatter(
-                    x=x,
-                    y=y,
-                    mode="markers",
-                    marker=dict(
-                        size=sizes,
-                        color=labels,
-                    ),
-                    text=ids.tolist(),
-                )
-            ]
+            data=[],
         )
+
+        for label, color in colors.items():
+            mask = np.array(labels) == label
+            frame.data += (go.Scatter(
+                x=x[mask],
+                y=y[mask],
+                mode="markers",
+                marker=dict(size=sizes[mask], color=color),
+                text=ids[mask].tolist(),
+                name=f"Label {label}",
+                legendgroup=f"label-{label}",
+            ),)
+
         self._trajectory.log(frame)

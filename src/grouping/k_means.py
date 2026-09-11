@@ -2,6 +2,7 @@ from sklearn.preprocessing import StandardScaler
 from sklearn.cluster import KMeans
 import numpy as np
 import plotly.graph_objects as go
+from plotly.colors import qualitative
 from src.data.region import Region
 from src.data.grouped_region import GroupedRegion
 from src.grouping.grouping_algo import GroupingAlgo
@@ -77,6 +78,10 @@ class K_Means(GroupingAlgo):
         y = np.array([coord.y  for coord in grouped_region.houses["coordinate"]])
         labels = list(grouped_region.get_labels().values())
         centroids = grouped_region.get_group_centroids()
+        colors = {
+            label: qualitative.Plotly[int(label) % len(qualitative.Plotly)]
+            for label in sorted(set(labels))
+        }
         diffs = np.array([
             gen[0] - load[0] 
             for gen, load 
@@ -85,31 +90,39 @@ class K_Means(GroupingAlgo):
 
         frame = go.Frame(
             name=str(f'iteration {i}'),
-            data=[
-                go.Scatter(
-                    x=x,
-                    y=y,
-                    mode="markers",
-                    marker=dict(
-                        size=abs(diffs/diffs.max())*20,
-                        color=labels,
-                    ),
-                    text=ids,
-                ),
-
-                go.Scatter(
-                    x=centroids["x"],
-                    y=centroids["y"],
-                    mode="markers",
-                    marker=dict(
-                        size=20,
-                        symbol="x",
-                    ),
-                    text=centroids["label"],
-                    name="Centroids",
-                ),
-            ],
+            data=[],
         )
+
+        marker_sizes = np.maximum(abs(diffs / diffs.max()) * 20, 7)
+        for label, color in colors.items():
+            mask = np.array(labels) == label
+            frame.data += (go.Scatter(
+                x=x[mask],
+                y=y[mask],
+                mode="markers",
+                marker=dict(size=marker_sizes[mask], color=color),
+                text=ids[mask],
+                name=f"Label {label}",
+                legendgroup=f"label-{label}",
+            ),)
+
+        for _, centroid in centroids.iterrows():
+            label = int(centroid["label"])
+            frame.data += (go.Scatter(
+                x=[centroid["x"]],
+                y=[centroid["y"]],
+                mode="markers",
+                marker=dict(
+                    size=16,
+                    symbol="x",
+                    color=colors[label],
+                    line=dict(color=colors[label], width=0.8),
+                ),
+                text=[f"Centroid {label}"],
+                name=f"Centroid {label}",
+                legendgroup=f"label-{label}",
+                showlegend=False,
+            ),)
 
         self.trajectory.log(frame)
 
