@@ -109,13 +109,17 @@ class GroupedRegion:
        
         centroid = houses.geometry.union_all().centroid
         
-        distance = houses.geometry.distance(centroid).sum()
-        group_distance = 0
+        region_distances = houses.geometry.distance(centroid).to_numpy()
+        positive_distances = region_distances[region_distances > 0]
+        scale = np.median(positive_distances) if positive_distances.size else 1.0
+        distance = (np.exp2(region_distances / scale) - 1).sum()
+        group_distance = 0.0
 
         for label in houses["label"].unique():
             group = houses[houses["label"] == label]
             group_centroid = group.geometry.union_all().centroid
-            group_distance += group.geometry.distance(group_centroid).sum()
+            group_distances = group.geometry.distance(group_centroid).to_numpy()
+            group_distance += np.exp2(group_distances / scale).sum() - len(group)
 
         return 1 - (group_distance / distance) if distance > 0 else 1
 
