@@ -128,7 +128,7 @@ class RegionGenerator:
                 },
                 geometry='coordinate',
                 crs="EPSG:4326"
-            )
+            ).to_crs("EPSG:3857")
         )
     
     def _estimate_number_of_household(self, areas: pd.Series):
