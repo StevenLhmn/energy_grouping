@@ -107,21 +107,18 @@ class GroupedRegion:
         if houses.crs != "EPSG:3857":
             houses = houses.to_crs("EPSG:3857")
        
-        centroid = houses.geometry.union_all().centroid
-        
-        region_distances = houses.geometry.distance(centroid).to_numpy()
-        positive_distances = region_distances[region_distances > 0]
-        scale = np.median(positive_distances) if positive_distances.size else 1.0
-        distance = (np.exp2(region_distances / scale) - 1).sum()
-        group_distance = 0.0
+        region_centroid = houses.geometry.union_all().centroid
+        region_distances = houses.geometry.distance(region_centroid)
+        region_distance = region_distances.to_numpy().sum()
 
+        group_distance = 0.0
         for label in houses["label"].unique():
             group = houses[houses["label"] == label]
             group_centroid = group.geometry.union_all().centroid
             group_distances = group.geometry.distance(group_centroid).to_numpy()
-            group_distance += np.exp2(group_distances / scale).sum() - len(group)
+            group_distance += group_distances.to_numpy().sum()
 
-        return 1 - (group_distance / distance) if distance > 0 else 1
+        return 1 - (group_distance / region_distance) if region_distance > 0 else 1
 
     def region_score(self, distance_weight: float = 0.5):
         """
