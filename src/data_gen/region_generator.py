@@ -46,7 +46,7 @@ class RegionGenerator:
 
         Parameters:
         - gdf: GeoDataFrame with columns "coordinate", "load", and "gen"
-        """
+        """ #TODO check necessity
         return Region(gdf)
 
     def _random_series(self, n_houses, max_energy, time_steps):

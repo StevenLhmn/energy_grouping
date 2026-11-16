@@ -94,3 +94,22 @@ class Region:
     def get_diffs(self):
         diffs = self.houses["gen"] - self.houses["load"]
         return diffs.to_list()
+
+    def get_dissimilarity(self, left: str, right: str):
+        house_ids = set(self.houses["id"])
+        if left not in house_ids:
+            raise ValueError(f"House id {left!r} does not exist in this region")
+        if right not in house_ids:
+            raise ValueError(f"House id {right!r} does not exist in this region")
+
+        left_house = self.houses.loc[self.houses["id"] == left].iloc[0]
+        right_house = self.houses.loc[self.houses["id"] == right].iloc[0]
+
+        left_diff = left_house["gen"] - left_house["load"]
+        right_diff = right_house["gen"] - right_house["load"]
+
+        dissimilarity = left_diff + right_diff
+
+        abs_dissimilarity = np.abs(dissimilarity)
+
+        return sum(abs_dissimilarity)

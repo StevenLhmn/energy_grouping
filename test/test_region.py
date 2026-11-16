@@ -314,6 +314,35 @@ class Test_Region(unittest.TestCase):
             for j in range(3):
                 self.assertEquals(diffs[i][j], expected_result[i][j])
 
+    def test_dissimilarity(self):
+        gdf = gpd.GeoDataFrame(
+            {
+                'gen': [
+                    np.array([1, 2, 3]),
+                    np.array([10, 10, 0]),
+                    np.array([7, 8, 9]),
+                    np.array([0, 5, 10])],
+                'load': [
+                    np.array([9, 8, 7]),
+                    np.array([0, 10, 10]),
+                    np.array([3, 2, 1]),
+                    np.array([10, 5, 0])],
+                'coordinate': [
+                    Point(0, 0),
+                    Point(1.6516, 1.165),
+                    Point(2, 2),
+                    Point(1.234567, 7.654321)]
+            },
+            geometry='coordinate',
+            crs="EPSG:3857"
+        )
+        region = Region(gdf)
+        dissimilarity = region.get_dissimilarity("X0.000000|Y0.000000", "X2.000000|Y2.000000")
+        self.assertEqual(dissimilarity, 8)
+
+        dissimilarity = region.get_dissimilarity("X1.651600|Y1.165000", "X1.234567|Y7.654321")
+        self.assertEqual(dissimilarity, 0)
+
 
 if __name__ == '__main__':
     unittest.main()
