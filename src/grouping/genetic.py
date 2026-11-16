@@ -128,14 +128,14 @@ class Genetic(GroupingAlgo):
             raise ValueError(f"iters must be greater than 0. But was {iters}")
         return iters
 
-    def _update_trajectory(self, region, population, fitness, i):
+    def _update_trajectory(self, region: Region, population, fitness, i):
         best = population[int(np.argmax(fitness))]
         grouped_region = GroupedRegion(
             region,
             self._labels_from_chromosome(best, region)
         )
         houses = region.houses
-        ids = houses["id"]
+        ids = region.get_indexes()
         x = np.array([coord.x for coord in houses["coordinate"]])
         y = np.array([coord.y for coord in houses["coordinate"]])
         labels = list(grouped_region.get_labels().values())
@@ -175,7 +175,7 @@ class Genetic(GroupingAlgo):
             customdata=np.asarray(labels),
             name="Houses",
             hovertemplate="House %{text}<br>Group %{customdata}<extra></extra>",
-        ),)
+        ))
 
         self._trajectory.log(frame)
         return frame
