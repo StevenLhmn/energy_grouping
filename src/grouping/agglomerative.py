@@ -40,19 +40,31 @@ class Agglomerative(GroupingAlgo):
             distance = region.get_dissimilarity(left, right)  # Your distance calculation
             cluster_dissimilarities.at[left, right] = distance
             cluster_dissimilarities.at[right, left] = distance
-
+        group_size = 0
         while group_size > self.max_clusters:
-            self._smalles(tcluster_dissimilarities)
+            self._smalles(cluster_dissimilarities)
+
+        
 
         self.result = GroupedRegion(region, labels=[])
 
     def get_trajectory(self, trajectory: Trajectory):
         pass
 
-    def _smallest(self, matrix: pd.Dataframe):
-        upper = matrix.where(
-            np.triu(np.ones(matrix.shape, dtype=bool), k=1)
-        )
 
-        left, right = upper.stack().idxmin()
-        smallest = upper.loc[left, right]
+    def _get_id_smallest_in_triangle(self, matrix: pd.DataFrame):
+        if not isinstance(matrix, pd.DataFrame):
+            raise TypeError("matrix must be a pandas DataFrame")
+        if matrix.ndim != 2 or matrix.shape[0] != matrix.shape[1]:
+            raise ValueError("matrix must be square")
+        if matrix.shape[0] < 2:
+            raise ValueError("matrix must contain at least two rows and columns")
+        if not all(pd.api.types.is_numeric_dtype(dtype) for dtype in matrix.dtypes):
+            raise TypeError("matrix must contain only numeric values")
+        
+        mask = np.ones(matrix.shape, dtype=bool)
+        triangle_mask = np.triu(mask, k=1)
+        triangle = matrix.where(triangle_mask)
+
+        row, collumn = triangle.stack().idxmin()
+        return row, collumn
