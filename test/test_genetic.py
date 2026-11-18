@@ -2,7 +2,6 @@ import unittest
 import numpy as np
 import geopandas as gpd
 from shapely.geometry import Point
-from src.grouping.brute_force import Brute_Force
 from src.data_gen.region_generator import RegionGenerator
 from src.grouping.genetic import Genetic
 from src.utilities.seed_container import Seed_Container

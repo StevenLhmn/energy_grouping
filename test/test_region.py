@@ -343,6 +343,13 @@ class Test_Region(unittest.TestCase):
         dissimilarity = region.get_dissimilarity("X1.651600|Y1.165000", "X1.234567|Y7.654321")
         self.assertEqual(dissimilarity, 0)
 
+        dissimilarity = region.get_dissimilarity(
+            ["X0.000000|Y0.000000", "X1.651600|Y1.165000"],
+            ["X2.000000|Y2.000000"]
+        )
+        self.assertEqual(dissimilarity, 12)
+
+
 
 if __name__ == '__main__':
     unittest.main()
