@@ -19,34 +19,82 @@ class Agglomerative(GroupingAlgo):
                 raise TypeError("max_clusters must be an integer or None")
             if max_clusters <= 0:
                 raise ValueError("max_clusters must be greater than 0")
+        else:
+            pass #TODO
         self.max_clusters = max_clusters
         self._trajectory = Trajectory()
 
     def __str__(self):
         return "Agglomerative"
 
-    def group(self, region:Region, Animate=True):
-        indexes = region.get_indexes().tolist()
-        gen_load = region.houses.loc[:, ["id", "gen", "load"]].copy()
-
-        cluster_dissimilarities = pd.DataFrame(
-            np.nan, index=indexes, columns=indexes
+    def group(self, region: Region, Animate=True):
+        # init
+        ids = region.get_indexes().tolist()
+        cluster_map = {index: [index] for index in ids}
+        cluster_index = 1
+        cluster_dissimilarities: pd.DataFrame = pd.DataFrame(
+            np.nan, index=ids, columns=ids
         )
 
-        for index in indexes:
+        for index in ids:
             cluster_dissimilarities.at[index, index] = 0.0
 
-        for left, right in combinations(indexes, 2):
-            distance = region.get_dissimilarity(left, right)  # Your distance calculation
+        for left, right in combinations(ids, 2):
+            distance =self._distance_between_clusters(left, right)
             cluster_dissimilarities.at[left, right] = distance
             cluster_dissimilarities.at[right, left] = distance
-        group_size = 0
-        while group_size > self.max_clusters:
-            self._smalles(cluster_dissimilarities)
 
-        
+        # start
+        while cluster_dissimilarities.index.size > self.max_clusters:
+            # find closest
+            row, col = self._get_id_smallest_in_triangle(cluster_dissimilarities)
+            
+            # merge closest
+                # Remove the two old clusters from the matrix and map.
+            cluster_dissimilarities = cluster_dissimilarities.drop(
+                index=[row, col], columns=[row, col]
+            )
+                #add new cluster to map
+            row_ids = cluster_map[row]
+            col_ids = cluster_map[col]
+            new_ids = row_ids + col_ids
+            cluster_map[cluster_index] = new_ids
 
-        self.result = GroupedRegion(region, labels=[])
+                # add new cluster to matrix
+                    #column for new cluster
+            new_column = pd.Series(
+                np.nan, index=cluster_dissimilarities.index, name=cluster_index
+            )
+            for row in new_column.index:
+                dissimilarity =self._distance_between_clusters(new_ids, cluster_map[row])
+                new_column.at[row] = dissimilarity
+            cluster_dissimilarities.loc[:, cluster_index] = new_column
+                
+                    #row for new cluster
+            new_row = pd.Series(
+                np.nan, index=cluster_dissimilarities.columns, name=cluster_index
+            )
+            for col in new_row.index:
+                dissimilarity =self._distance_between_clusters(new_ids, cluster_map[col])
+                new_row.at[col] = dissimilarity
+            cluster_dissimilarities.loc[cluster_index, :] = new_row
+
+            cluster_dissimilarities.loc[cluster_index, cluster_index] = 0.0
+
+            # Remove the two old clusters from the matrix and map.
+            cluster_dissimilarities = cluster_dissimilarities.drop(
+                index=[row, col], columns=[row, col]
+            )
+            cluster_index += 1
+
+        labels = {
+            house_id: cluster_id
+            for cluster_id in cluster_dissimilarities.index
+            for house_id in cluster_map[cluster_id]
+        }
+        self.result = GroupedRegion(region, labels=labels)
+
+        return self.result
 
     def get_trajectory(self, trajectory: Trajectory):
         pass
@@ -66,5 +114,10 @@ class Agglomerative(GroupingAlgo):
         triangle_mask = np.triu(mask, k=1)
         triangle = matrix.where(triangle_mask)
 
-        row, collumn = triangle.stack().idxmin()
-        return row, collumn
+        row, col = triangle.stack().idxmin()
+        return row, col
+
+    def _distance_between_clusters(self, region, left, right):
+        distance = 0 * self.distance_weight #TODO normalize and add distance
+        dissimilarity = region.get_dissimilarity(left, right) * (1 - self.distance_weight)
+        return region.get_dissimilarity(left, right) * (1 - self.distance_weight)

@@ -84,7 +84,7 @@ class Region:
 
     def get_indexes(self) -> list[str]:
         """
-            No house can have the same index and the house will keeep the index for the rest of the time.
+            No house can have the same index and the house will keep the index for the rest of the time.
         """        
         return self.houses["id"]
 
@@ -95,21 +95,35 @@ class Region:
         diffs = self.houses["gen"] - self.houses["load"]
         return diffs.to_list()
 
-    def get_dissimilarity(self, left: str, right: str):
+    def get_dissimilarity(self, left: str | list[str], right: str | list[str]):
+        def normalize_and_check_ids(ids, parameter_name):
+            if isinstance(ids, str):
+                ids = [ids]
+            elif not isinstance(ids, list):
+                raise TypeError(f"{parameter_name} must be a string or a list of strings")
+
+            if not ids:
+                raise ValueError(f"{parameter_name} must contain at least one house id")
+            if not all(isinstance(house_id, str) for house_id in ids):
+                raise TypeError(f"{parameter_name} must contain only strings")
+            if len(ids) != len(set(ids)):
+                raise ValueError(f"{parameter_name} must not contain duplicate house ids")
+
+            missing_ids = set(ids) - house_ids
+            if missing_ids:
+                raise ValueError(
+                    f"House ids {sorted(missing_ids)!r} do not exist in this region"
+                )
+            return ids
+
         house_ids = set(self.houses["id"])
-        if left not in house_ids:
-            raise ValueError(f"House id {left!r} does not exist in this region")
-        if right not in house_ids:
-            raise ValueError(f"House id {right!r} does not exist in this region")
+        left_ids = normalize_and_check_ids(left, "left")
+        right_ids = normalize_and_check_ids(right, "right")
 
-        left_house = self.houses.loc[self.houses["id"] == left].iloc[0]
-        right_house = self.houses.loc[self.houses["id"] == right].iloc[0]
+        left_houses = self.houses.loc[self.houses["id"].isin(left_ids)]
+        right_houses = self.houses.loc[self.houses["id"].isin(right_ids)]
 
-        left_diff = left_house["gen"] - left_house["load"]
-        right_diff = right_house["gen"] - right_house["load"]
+        left_diff = np.sum(np.stack(left_houses["gen"]) - np.stack(left_houses["load"]), axis=0)
+        right_diff = np.sum(np.stack(right_houses["gen"]) - np.stack(right_houses["load"]), axis=0)
 
-        dissimilarity = left_diff + right_diff
-
-        abs_dissimilarity = np.abs(dissimilarity)
-
-        return sum(abs_dissimilarity)
+        return np.sum(np.abs(left_diff + right_diff))
